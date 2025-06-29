@@ -1,0 +1,577 @@
+﻿@using GIBS.Module.BusinessDirectory.Models
+@using GIBS.Module.BusinessDirectory.Interfaces
+@using GIBS.Module.BusinessDirectory.Services
+@using Oqtane.Modules.Controls
+@using Oqtane.UI
+@using Oqtane.Shared
+@using Oqtane.Enums
+@using System.ComponentModel.DataAnnotations
+@using System.Linq
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@inject IBusinessCompanyService BusinessCompanyService
+@inject IBusinessDirectoryService BusinessDirectoryService
+@inject NavigationManager NavigationManager
+@inject IStringLocalizer<CompanyEdit> Localizer
+@inject ISettingService SettingService
+@inject Microsoft.JSInterop.IJSRuntime JSRuntime
+
+@namespace GIBS.Module.BusinessDirectory
+@inherits ModuleBase
+
+@if (_initialized)
+{
+    <form @ref="_form" class="@(_validated ? "was-validated" : "needs-validation")" novalidate>
+        <div class="container">
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="typeId" HelpText="Select company type category." ResourceKey="Label.TypeId" />
+                <div class="col-sm-9">
+                    <select id="typeId" class="form-select" @bind="_company.TypeId" required>
+                        <option value="-1">@Localizer["SelectType"]</option>
+                        @RenderOptions(ParentItems)
+                    </select>
+                    <div class="invalid-feedback">@Localizer["Validation.CompanyType.Required"]</div>
+                </div>
+            </div>
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="companyName" HelpText="Enter the company name." ResourceKey="LabelCompanyName" />
+                <div class="col-sm-9">
+                    <input id="companyName" class="form-control" @bind="_company.CompanyName" @oninput="OnCompanyNameInput" required />
+                    <div class="invalid-feedback">@Localizer["Validation.CompanyName.Required"]</div>
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="address" HelpText="Enter the address." ResourceKey="Label.Address" />
+                <div class="col-sm-9">
+                    <input id="address" class="form-control" @bind="_company.Address" required />
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="city" HelpText="Enter the city." ResourceKey="Label.City">@Localizer["Label.City"]</Label>
+                <div class="col-sm-9">
+                    <input id="city" class="form-control" @bind="_company.City" required />
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="state" HelpText="Enter the state." ResourceKey="Label.State">@Localizer["Label.State"]</Label>
+                <div class="col-sm-9">
+                    <select id="state" class="form-select" @bind="_company.State" required>
+                        <option value="">Select a State</option>
+                        <option value="AL">Alabama</option>
+                        <option value="AK">Alaska</option>
+                        <option value="AZ">Arizona</option>
+                        <option value="AR">Arkansas</option>
+                        <option value="CA">California</option>
+                        <option value="CO">Colorado</option>
+                        <option value="CT">Connecticut</option>
+                        <option value="DE">Delaware</option>
+                        <option value="DC">District Of Columbia</option>
+                        <option value="FL">Florida</option>
+                        <option value="GA">Georgia</option>
+                        <option value="HI">Hawaii</option>
+                        <option value="ID">Idaho</option>
+                        <option value="IL">Illinois</option>
+                        <option value="IN">Indiana</option>
+                        <option value="IA">Iowa</option>
+                        <option value="KS">Kansas</option>
+                        <option value="KY">Kentucky</option>
+                        <option value="LA">Louisiana</option>
+                        <option value="ME">Maine</option>
+                        <option value="MD">Maryland</option>
+                        <option value="MA">Massachusetts</option>
+                        <option value="MI">Michigan</option>
+                        <option value="MN">Minnesota</option>
+                        <option value="MS">Mississippi</option>
+                        <option value="MO">Missouri</option>
+                        <option value="MT">Montana</option>
+                        <option value="NE">Nebraska</option>
+                        <option value="NV">Nevada</option>
+                        <option value="NH">New Hampshire</option>
+                        <option value="NJ">New Jersey</option>
+                        <option value="NM">New Mexico</option>
+                        <option value="NY">New York</option>
+                        <option value="NC">North Carolina</option>
+                        <option value="ND">North Dakota</option>
+                        <option value="OH">Ohio</option>
+                        <option value="OK">Oklahoma</option>
+                        <option value="OR">Oregon</option>
+                        <option value="PA">Pennsylvania</option>
+                        <option value="RI">Rhode Island</option>
+                        <option value="SC">South Carolina</option>
+                        <option value="SD">South Dakota</option>
+                        <option value="TN">Tennessee</option>
+                        <option value="TX">Texas</option>
+                        <option value="UT">Utah</option>
+                        <option value="VT">Vermont</option>
+                        <option value="VA">Virginia</option>
+                        <option value="WA">Washington</option>
+                        <option value="WV">West Virginia</option>
+                        <option value="WI">Wisconsin</option>
+                        <option value="WY">Wyoming</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="zipCode" HelpText="Enter the zip code." ResourceKey="Label.ZipCode">@Localizer["Label.ZipCode"]</Label>
+                <div class="col-sm-9">
+                    <input id="zipCode" class="form-control" pattern="^\d{5}(?:-\d{4})?$" @bind="_company.ZipCode" />
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="phone" HelpText="Enter the phone number." ResourceKey="Label.Phone">@Localizer["Label.Phone"]</Label>
+                <div class="col-sm-9">
+                    <input id="phone" type="tel" class="form-control" @bind="_company.Phone" />
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="email" HelpText="Enter the email address." ResourceKey="Label.Email">@Localizer["Label.Email"]</Label>
+                <div class="col-sm-9">
+                    <input id="email" type="email" class="form-control" @bind="_company.Email" />
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="website" HelpText="Enter the website URL." ResourceKey="Label.Website">@Localizer["Label.Website"]</Label>
+                <div class="col-sm-9">
+                    <input id="website" type="url" class="form-control" @bind="_company.Website" />
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="description" HelpText="Enter a description." ResourceKey="Label.Description">@Localizer["Label.Description"]</Label>
+                <div class="col-sm-9">
+                    <textarea id="description" class="form-control" @bind="_company.Description"></textarea>
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="slug" HelpText="Auto-generated from company name." ResourceKey="Label.Slug">@Localizer["Label.Slug"]</Label>
+                <div class="col-sm-9">
+                    <input id="slug" class="form-control" @bind="_company.Slug" />
+                </div>
+            </div>
+
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="imageURL" HelpText="Upload or enter an image URL." ResourceKey="Label.ImageURL">@Localizer["Label.ImageURL"]</Label>
+                <div class="col-sm-9">
+                    <input id="imageURL" class="form-control mb-1" @bind="_company.ImageURL" placeholder="Paste or enter image URL" />
+                    
+                    @if (!string.IsNullOrEmpty(_imageUploadError))
+                    {
+                        <div class="text-danger">@_imageUploadError</div>
+                    }
+                    @if (!string.IsNullOrEmpty(_company.ImageURL))
+                    {
+                        <img src="@_company.ImageURL" alt="Image preview" style="max-width: 200px; max-height: 100px; margin-top: 5px;" />
+                    }
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="imageUpload" HelpText="Upload an image file." ResourceKey="Label.ImageUpload">Image Upload</Label>
+                <div class="col-sm-9">
+                    <InputFile id="imageUpload" OnChange="OnImageFileSelected" />
+                    @if (!string.IsNullOrEmpty(_imageUploadError))
+                    {
+                        <div class="text-danger">@_imageUploadError</div>
+                    }
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="sortOrder" HelpText="Enter the sort order." ResourceKey="Label.SortOrder">@Localizer["Label.SortOrder"]</Label>
+                <div class="col-sm-9">
+                    <input id="sortOrder" type="number" step="1" class="form-control" @bind="_company.SortOrder" required />
+                    <div class="invalid-feedback">@Localizer["Validation.SortOrder.Required"]</div>
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="isNewItem" HelpText="Check if this is a new item." ResourceKey="Label.IsNewItem">@Localizer["Label.IsNewItem"]</Label>
+                <div class="col-sm-9">
+                    <input id="isNewItem" type="checkbox" class="form-check-input" @bind="_company.IsNewItem" />
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="isActive" HelpText="Check if this company is active." ResourceKey="Label.IsActive">@Localizer["Label.IsActive"]</Label>
+                <div class="col-sm-9">
+                    <input id="isActive" type="checkbox" class="form-check-input" @bind="_company.IsActive" />
+                </div>
+            </div>
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="isActive" HelpText="Click button to lookup latitude and Longitude" ResourceKey="Label.LatLongButton" />
+                <div class="col-sm-9">
+                    <button type="button" class="btn btn-info" @onclick="LookupLatLong">
+                        @Localizer["LookupLatLong"]
+                    </button>
+                    @if (!string.IsNullOrEmpty(_geoError))
+                    {
+                        <div class="text-danger mt-1">@_geoError</div>
+                    }
+                    @if (_company.Latitude != 0 && _company.Longitude != 0)
+                    {
+                        <div class="mt-3">
+                            <iframe width="100%"
+                                    height="300"
+                                    style="border:0"
+                                    loading="lazy"
+                                    allowfullscreen
+                                    referrerpolicy="no-referrer-when-downgrade"
+                                    src="https://www.google.com/maps/embed/v1/place?key=@_apiKey&q=@_company.Latitude,@_company.Longitude&zoom=16&maptype=roadmap">
+                            </iframe>
+                        </div>
+                    }
+                </div>
+
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="latitude" HelpText="Enter the latitude." ResourceKey="Label.Latitude">@Localizer["Label.Latitude"]</Label>
+                <div class="col-sm-9">
+                    <input id="latitude" type="number" step="any" class="form-control" @bind="_company.Latitude" />
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="longitude" HelpText="Enter the longitude." ResourceKey="Label.Longitude">@Localizer["Label.Longitude"]</Label>
+                <div class="col-sm-9">
+                    <input id="longitude" type="number" step="any" class="form-control" @bind="_company.Longitude" />
+                </div>
+            </div>
+
+
+        </div>
+        <br />
+        <div class="align-bottom">
+        <button type="button" class="btn btn-success" @onclick="SaveCompany">@Localizer["Save.Text"]</button> <NavLink class="btn btn-secondary" href="@ReturnUrl()">@Localizer["Cancel.Text"]</NavLink>
+        </div>
+
+        @if (_isEditMode && _company != null && _company.CompanyId != 0)
+        {
+            <hr />
+            <AuditInfo CreatedBy="@_company.CreatedBy" CreatedOn="@_company.CreatedOn" ModifiedBy="@_company.ModifiedBy" ModifiedOn="@_company.ModifiedOn"></AuditInfo>
+        }
+    </form>
+}
+else
+{
+    <p><em>@Localizer["Loading.Text"]</em></p>
+}
+
+@code {
+    private BusinessCompany _company = new();
+    private ElementReference _form;
+    private bool _validated = false;
+    private bool _isEditMode = false;
+    private bool _initialized = false;
+    private string CurrentUserName;
+
+    private List<BusinessType> ParentItems = new();
+    //private int _parentId = -1;
+    private string _geoError;
+    private string _apiKey = "";
+    private string _returnurl = string.Empty;
+    private string _imageUploadError;
+
+    public override List<Resource> Resources => new List<Resource>()
+    {
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "Module.css" },
+        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + "Module.js" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        if (PageState.QueryString.ContainsKey("returnurl") && PageState.QueryString.TryGetValue("returnurl", out var returnurl))
+        {
+            _returnurl = returnurl.ToString();
+        }
+        
+
+        _apiKey = SettingService.GetSetting(ModuleState.Settings, "GoogleApiKey", "");
+
+        int moduleId = PageState.ModuleId /* get your ModuleId here */;
+        // ParentItems = await BusinessDirectoryService.GetBusinessDirectorysAsync(moduleId);
+        ParentItems = BuildTree(await BusinessDirectoryService.GetBusinessDirectorysAsync(moduleId));
+
+        // Get current user (optional, for audit fields)
+        var authState = await GetAuthenticationStateAsync();
+        var user = authState?.User;
+        CurrentUserName = user?.Identity?.IsAuthenticated == true ? user.Identity.Name : "Anonymous";
+
+        try
+        {
+            if (PageState.QueryString.ContainsKey("id") && int.TryParse(PageState.QueryString["id"], out int companyId))
+            {
+                _isEditMode = true;
+
+                _company = await BusinessCompanyService.GetBusinessCompanyAsync(companyId, ModuleState.ModuleId);
+                if (_company == null)
+                {
+                    AddModuleMessage(Localizer["Error.LoadCompany.NotFound", companyId.ToString()], MessageType.Error);
+                    NavigationManager.NavigateTo(ReturnUrl());
+                    return;
+                }
+            }
+            else
+            {
+                _isEditMode = false;
+                _company = new BusinessCompany
+                {
+                    State = "MA", // Default state, can be changed
+                    TypeId = -1,
+                    IsActive = true,
+                    ModuleId = ModuleState.ModuleId,
+                    SortOrder = 10
+                };
+                // Optionally set default sort order here
+            }
+            _initialized = true;
+        }
+        catch (Exception ex)
+        {
+            AddModuleMessage(Localizer["Error.PageLoad"] + $": {ex.Message}", MessageType.Error);
+            _initialized = true;
+        }
+    }
+
+    // private string ReturnUrl()
+    // {
+    //     if (ModuleState != null)
+    //     {
+    //         return (!string.IsNullOrEmpty(NavigateUrl() + "/*/" + ModuleState.ModuleId + "/Company")) ? NavigateUrl() + "/*/" + ModuleState.ModuleId + "/Company" : NavigateUrl();
+    //     }
+    //     return NavigateUrl();
+    // }
+
+    private string ReturnUrl()
+    {
+        if (!string.IsNullOrEmpty(_returnurl))
+        {
+            // var myReturnUrl = WebUtility.HtmlDecode(_returnurl);
+            return NavigateUrl();
+        }
+
+        else if (ModuleState != null)
+        {
+            return (!string.IsNullOrEmpty(NavigateUrl() + "/*/" + ModuleState.ModuleId + "/Company")) ? NavigateUrl() + "/*/" + ModuleState.ModuleId + "/Company" : NavigateUrl();
+        }
+        else
+        {
+            return NavigateUrl();
+        }
+        //    return NavigateUrl();
+    }
+    
+
+    private async Task LookupLatLong()
+    {
+        _geoError = null;
+        try
+        {
+            // Build the address string
+            var address = $"{_company.Address}, {_company.City}, {_company.State} {_company.ZipCode}";
+        //    var _apiKey = SettingService.GetSetting(ModuleState.Settings, "GoogleApiKey", "");
+            if (string.IsNullOrWhiteSpace(_apiKey))
+            {
+                _geoError = "Google Maps API key is missing in settings.";
+                return;
+            }
+
+            var url = $"https://maps.googleapis.com/maps/api/geocode/json?address={Uri.EscapeDataString(address)}&key={_apiKey}";
+
+            using var http = new HttpClient();
+            var response = await http.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                _geoError = $"Error calling Google Maps API: {response.ReasonPhrase}";
+                return;
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var geo = System.Text.Json.JsonDocument.Parse(json);
+
+            var status = geo.RootElement.GetProperty("status").GetString();
+            if (status != "OK")
+            {
+                _geoError = $"Geocoding failed: {status}";
+                return;
+            }
+
+            var location = geo.RootElement
+                .GetProperty("results")[0]
+                .GetProperty("geometry")
+                .GetProperty("location");
+
+            _company.Latitude = location.GetProperty("lat").GetDouble();
+            _company.Longitude = location.GetProperty("lng").GetDouble();
+        }
+        catch (Exception ex)
+        {
+            _geoError = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task SaveCompany()
+    {
+        _validated = true;
+        var formIsValid = await JSRuntime.InvokeAsync<bool>("interopFormValid", _form);
+
+        if (!formIsValid)
+        {
+            AddModuleMessage(Localizer["Error.Validation"], MessageType.Warning);
+            return;
+        }
+
+        try
+        {
+            if (_isEditMode)
+            {
+                _company.ModifiedBy = CurrentUserName;
+                await BusinessCompanyService.UpdateBusinessCompanyAsync(_company);
+                AddModuleMessage(Localizer["Success.Update"], MessageType.Success);
+            }
+            else
+            {
+                _company.CreatedBy = CurrentUserName;
+                _company.ModuleId = ModuleState.ModuleId;
+                await BusinessCompanyService.AddBusinessCompanyAsync(_company);
+                AddModuleMessage(Localizer["Success.Add"], MessageType.Success);
+            }
+            NavigationManager.NavigateTo(ReturnUrl());
+        }
+        catch (Exception ex)
+        {
+            AddModuleMessage(Localizer["Error.Save"] + $": {ex.Message}", MessageType.Error);
+        }
+    }
+
+    private async Task OnImageFileSelected(InputFileChangeEventArgs e)
+    {
+        _imageUploadError = null;
+        var file = e.File;
+        if (file == null)
+        {
+            _imageUploadError = "No file selected.";
+            return;
+        }
+
+        if (BusinessCompanyService == null)
+        {
+            _imageUploadError = "BusinessCompanyService is not available.";
+            return;
+        }
+
+        try
+        {
+            using var stream = file.OpenReadStream(5 * 1024 * 1024); // 5MB limit
+            var buffer = new byte[file.Size];
+            await stream.ReadAsync(buffer, 0, (int)file.Size);
+
+            var fileName = file.Name;
+            var imageUrl = await BusinessCompanyService.UploadImageAsync(buffer, fileName);
+
+            if (!string.IsNullOrEmpty(imageUrl))
+            {
+                if (_company == null)
+                {
+                    _imageUploadError = "Company object is not initialized.";
+                }
+                else
+                {
+                    _company.ImageURL = imageUrl;
+                }
+            }
+            else
+            {
+                _imageUploadError = "Image upload failed.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _imageUploadError = $"Image upload error: {ex.Message}";
+        }
+    }
+
+    // private async Task UploadFile()
+    // {
+    //     var postUrl = "/api/BusinessCompany/upload";
+    //     var folder = "uploads/business-images";
+    //     var name = "Company";
+    //     await JSRuntime.InvokeVoidAsync("uploadFiles", postUrl, folder, name);
+    // }
+
+    private List<BusinessType> BuildTree(List<BusinessType> flatList)
+    {
+        var lookup = flatList.ToDictionary(x => x.TypeId);
+        var rootItems = new List<BusinessType>();
+
+        foreach (var item in flatList)
+        {
+            if (item.ParentId == 0 || !lookup.ContainsKey(item.ParentId))
+            {
+                rootItems.Add(item);
+            }
+            else
+            {
+                lookup[item.ParentId].Children.Add(item);
+            }
+        }
+        return rootItems;
+    }
+
+    private RenderFragment RenderOptions(IEnumerable<BusinessType> items, int level = 0) => builder =>
+{
+    int seq = 0;
+    foreach (var item in items)
+    {
+        builder.OpenElement(seq++, "option");
+        builder.AddAttribute(seq++, "value", item.TypeId);
+        builder.AddContent(seq++, new string('\u00A0', level * 4) + item.TypeName); // Indent with non-breaking spaces
+        builder.CloseElement();
+
+        if (item.Children != null && item.Children.Count > 0)
+        {
+            builder.AddContent(seq++, RenderOptions(item.Children, level + 1));
+        }
+    }
+};
+
+
+    private void OnCompanyNameInput(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? "";
+        _company.CompanyName = value;
+        _company.Slug = GenerateSlug(value);
+    }
+
+    private string GenerateSlug(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return "";
+        // Convert to lower, replace spaces with '-', allow a-z and 0-9, remove other chars
+        var slug = new string(input.ToLower().Select(c =>
+            (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ? c :
+            (c == ' ' ? '-' : '\0')).Where(c => c != '\0').ToArray());
+        // Replace multiple dashes with single dash
+        slug = System.Text.RegularExpressions.Regex.Replace(slug, "-+", "-");
+        // Trim dashes
+        slug = slug.Trim('-');
+        return slug;
+    }
+
+    // Helper to get AuthenticationState (if needed)
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    private async Task<AuthenticationState> GetAuthenticationStateAsync()
+    {
+        return authenticationStateTask != null ? await authenticationStateTask : null;
+    }
+}

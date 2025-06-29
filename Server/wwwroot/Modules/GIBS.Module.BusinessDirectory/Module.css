@@ -1,0 +1,154 @@
+/* Module Custom Styles */
+
+.typeDescription {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.typeLinks {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.company-listing-row {
+    padding: 16px 8px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    background: #fff;
+    border: 1px solid #eee;
+}
+
+.company-listing-alt {
+    background: #f4faff;
+}
+
+.company-listing-img img {
+    width: 110px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+    margin-right: 18px;
+}
+
+.company-listing-info {
+    min-width: 0;
+}
+
+.company-icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 6px;
+}
+
+.company-listing-address {
+    font-size: 1rem;
+    color: #444;
+    margin-bottom: 2px;
+}
+
+.company-listing-type {
+    color: #a33;
+    font-weight: bold;
+    font-size: 1.05rem;
+    margin-top: 4px;
+}
+
+.company-listing-actions {
+    min-width: 150px;
+    text-align: right;
+    font-size: 1rem;
+    margin-left: 16px;
+    margin-top: 4px;
+}
+
+.company-action-link {
+    font-size: 0.9rem;
+    text-decoration: none;
+    margin-bottom: 4px;
+    display: inline-block;
+}
+
+    .company-action-link:hover {
+        text-decoration: underline;
+    }
+
+.company-section-title {
+    font-family: 'Montserrat', Arial, sans-serif;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.company-details-card {
+    background: #fff;
+    border-radius: 6px;
+    padding: 24px 18px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.company-listing-title {
+    font-size: 1.2rem;
+    font-family: 'Montserrat', Arial, sans-serif;
+    color: #a33;
+    font-weight: bold;
+    margin-bottom: 2px;
+    align-items: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.company-details-header {
+    align-items: center;
+    font-size: 1.2rem;
+    font-family: 'Montserrat', Arial, sans-serif;
+    color: #a33;
+    font-weight: bold;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.company-details-address,
+.company-details-phone,
+.company-details-website {
+    font-size: 1.1rem;
+    color: #6c757d;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+    .company-details-website a {
+        font-size: 1.0rem;
+        font-weight: bold;
+        text-decoration: none;
+        word-break: break-all;
+    }
+
+        .company-details-website a:hover {
+            text-decoration: underline;
+        }
+
+.company-details-description {
+    margin-top: 12px;
+    color: #6a3a3a;
+    font-size: 1.05rem;
+    white-space: pre-line;
+}
+
+.company-details-image {
+    max-width: 360px;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #f4f4f4;
+}
+
+.company-details-map {
+    margin-top: 32px;
+}

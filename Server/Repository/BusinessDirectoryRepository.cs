@@ -1,0 +1,125 @@
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Collections.Generic;
+using Oqtane.Modules;
+using GIBS.Module.BusinessDirectory.Models;
+
+namespace GIBS.Module.BusinessDirectory.Repository
+{
+    public class BusinessDirectoryRepository : IBusinessDirectoryRepository, ITransientService
+    {
+        private readonly IDbContextFactory<BusinessDirectoryContext> _factory;
+
+        public BusinessDirectoryRepository(IDbContextFactory<BusinessDirectoryContext> factory)
+        {
+            _factory = factory;
+        }
+
+
+        public IEnumerable<Models.BusinessType> GetBusinessDirectorysAsync(int moduleId)
+        {
+            using var db = _factory.CreateDbContext();
+            return db.BusinessDirectory
+                .Where(item => item.ModuleId == moduleId)
+                .OrderBy(item => item.SortOrder)
+                .AsNoTracking()
+                .ToList();
+        }
+
+        public Models.BusinessType GetBusinessDirectoryAsync(int typeId, int moduleId)
+        {
+            using var db = _factory.CreateDbContext();
+            return db.BusinessDirectory
+                .AsNoTracking()
+                .FirstOrDefault(item => item.TypeId == typeId && item.ModuleId == moduleId);
+        }
+
+        public Models.BusinessType AddBusinessDirectoryAsync(Models.BusinessType businessDirectory)
+        {
+            using var db = _factory.CreateDbContext();
+            db.BusinessDirectory.Add(businessDirectory);
+            db.SaveChanges();
+            return businessDirectory;
+        }
+
+        public Models.BusinessType UpdateBusinessDirectoryAsync(Models.BusinessType businessDirectory)
+        {
+            using var db = _factory.CreateDbContext();
+            db.Entry(businessDirectory).State = EntityState.Modified;
+            db.SaveChanges();
+            return businessDirectory;
+        }
+
+        public void DeleteBusinessDirectoryAsync(int typeId, int moduleId)
+        {
+            using var db = _factory.CreateDbContext();
+            var businessDirectory = db.BusinessDirectory
+                .FirstOrDefault(item => item.TypeId == typeId && item.ModuleId == moduleId);
+            if (businessDirectory != null)
+            {
+                db.BusinessDirectory.Remove(businessDirectory);
+                db.SaveChanges();
+            }
+        }
+
+        public IEnumerable<BusinessType> GetBusinessDirectorys(int ModuleId)
+        {
+            using var db = _factory.CreateDbContext();
+            return db.BusinessDirectory
+                .Where(item => item.ModuleId == ModuleId)
+                .OrderBy(item => item.SortOrder)
+                .AsNoTracking()
+                .ToList();
+        }
+
+        public BusinessType GetBusinessDirectory(int TypeId)
+        {
+            using var db = _factory.CreateDbContext();
+            return db.BusinessDirectory
+                .AsNoTracking()
+                .FirstOrDefault(item => item.TypeId == TypeId);
+        }
+
+        public BusinessType GetBusinessDirectory(int TypeId, bool tracking)
+        {
+            using var db = _factory.CreateDbContext();
+            if (tracking)
+            {
+                return db.BusinessDirectory.Find(TypeId);
+            }
+            else
+            {
+                return db.BusinessDirectory.AsNoTracking().FirstOrDefault(item => item.TypeId == TypeId);
+            }
+        }
+
+        public BusinessType AddBusinessDirectory(BusinessType BusinessDirectory)
+        {
+            using var db = _factory.CreateDbContext();
+            db.BusinessDirectory.Add(BusinessDirectory);
+            db.SaveChanges();
+            return BusinessDirectory;
+        }
+
+        public BusinessType UpdateBusinessDirectory(BusinessType BusinessDirectory)
+        {
+            using var db = _factory.CreateDbContext();
+            db.Entry(BusinessDirectory).State = EntityState.Modified;
+            db.SaveChanges();
+            return BusinessDirectory;
+        }
+
+        public void DeleteBusinessDirectory(int TypeId)
+        {
+            using var db = _factory.CreateDbContext();
+            var businessDirectory = db.BusinessDirectory.Find(TypeId);
+            if (businessDirectory != null)
+            {
+                db.BusinessDirectory.Remove(businessDirectory);
+                db.SaveChanges();
+            }
+        }
+
+     
+    }
+}

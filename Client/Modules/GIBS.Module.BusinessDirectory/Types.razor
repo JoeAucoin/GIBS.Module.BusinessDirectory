@@ -1,0 +1,138 @@
+﻿@using GIBS.Module.BusinessDirectory.Models;
+@using GIBS.Module.BusinessDirectory.Services;
+
+@namespace GIBS.Module.BusinessDirectory
+@inherits ModuleBase
+@inject IBusinessDirectoryService BusinessDirectoryService
+@inject NavigationManager NavigationManager
+@inject IStringLocalizer<Types> Localizer
+
+<h3>Types</h3>
+<div>
+    <ActionLink Action="Add" Security="SecurityAccessLevel.Edit" Text="Add New Menu" ResourceKey="Add" />
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th style="width: 1px;">&nbsp;</th>
+            <th style="width: 1px;">&nbsp;</th>
+            <th>@Localizer["TypeName"]</th>
+            <th>@Localizer["Description"]</th>
+            <th>@Localizer["TypeId"]</th>
+            <th>@Localizer["ParentId"]</th>
+            <th>@Localizer["SortOrder"]</th>
+            <th>@Localizer["IsActive"]</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (_Types != null)
+        {
+            @RenderTree(_Types, 0)
+        }
+    </tbody>
+</table>
+
+
+<div><NavLink class="btn btn-secondary" href="@NavigateUrl()">@Localizer["Return"]</NavLink></div>
+
+@code {
+    public override string RenderMode => RenderModes.Static;
+
+    public override List<Resource> Resources => new List<Resource>()
+    {
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "Module.css" },
+        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + "Module.js" }
+    };
+
+    List<BusinessType> _Types;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var flatList = await BusinessDirectoryService.GetBusinessDirectorysAsync(ModuleState.ModuleId);
+            _Types = BuildTree(flatList);
+            //_Types = await BusinessDirectoryService.GetBusinessDirectorysAsync(ModuleState.ModuleId);
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error Loading RestaurantMenu {Error}", ex.Message);
+            AddModuleMessage(Localizer["Message.LoadError"], MessageType.Error);
+        }
+    }
+
+    private async Task Delete(BusinessType BusinessType)
+    {
+        try
+        {
+            await BusinessDirectoryService.DeleteBusinessDirectoryAsync(BusinessType.TypeId, ModuleState.ModuleId);
+            await logger.LogInformation("BusinessType Deleted {BusinessType}", BusinessType);
+            _Types = await BusinessDirectoryService.GetBusinessDirectorysAsync(ModuleState.ModuleId);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error Deleting BusinessType {BusinessType} {Error}", BusinessType, ex.Message);
+            AddModuleMessage(Localizer["Message.DeleteError"], MessageType.Error);
+        }
+    }
+
+    private List<BusinessType> BuildTree(List<BusinessType> flatList)
+    {
+        var lookup = flatList.ToDictionary(x => x.TypeId);
+        var rootItems = new List<BusinessType>();
+
+        foreach (var item in flatList)
+        {
+            if (item.ParentId == 0 || !lookup.ContainsKey(item.ParentId))
+            {
+                rootItems.Add(item);
+            }
+            else
+            {
+                lookup[item.ParentId].Children.Add(item);
+            }
+        }
+        return rootItems;
+    }
+
+
+
+    private RenderFragment RenderTree(IEnumerable<BusinessType> items, int level) => __builder =>
+    {
+        foreach (var item in items)
+        {
+            <tr>
+                <td>
+                    <ActionLink Action="Edit" Parameters=@($"id={item.TypeId}") ResourceKey="Edit" Text="Edit" />
+                </td>
+                <td>
+                    <ActionDialog Header="Delete RestaurantMenu"
+                                  Text="AD Delete"
+                                  Message="Are You Sure You Wish To Delete This Business Type?"
+                                  Action="Delete"
+                                  Security="SecurityAccessLevel.Edit"
+                                  Class="btn btn-danger"
+                                  OnClick=@(async () => await Delete(item))
+                                  ResourceKey="Delete"
+                                  Id=@item.TypeId.ToString() />
+                </td>
+                <td style="padding-left:@(level * 20)px"> @item.TypeName</td>
+                <td>@item.TypeDescription</td>
+                <td>@item.TypeId</td>
+                <td>@item.ParentId</td>
+                <td>@item.SortOrder</td>
+                <td><input id="isActive" type="checkbox" @bind="@item.IsActive" /></td>
+            </tr>
+            if (item.Children != null && item.Children.Count > 0)
+            {
+                @RenderTree(item.Children, level + 1)
+            }
+        }
+    };
+
+
+
+
+}
+

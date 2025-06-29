@@ -1,0 +1,268 @@
+@using Oqtane.Modules.Controls
+@using GIBS.Module.BusinessDirectory.Services
+@using GIBS.Module.BusinessDirectory.Models
+
+@namespace GIBS.Module.BusinessDirectory
+@inherits ModuleBase
+@inject IBusinessDirectoryService BusinessDirectoryService
+@inject NavigationManager NavigationManager
+@inject IStringLocalizer<Edit> Localizer
+
+<form @ref="form" class="@(validated ? " was-validated" : "needs-validation" )" novalidate>
+    <div class="container">
+        <div class="row mb-1 align-items-center">
+            <Label Class="col-sm-3" For="name" HelpText="Enter a name" ResourceKey="Name">Name: </Label>
+            <div class="col-sm-9">
+                <input id="name" class="form-control" @bind="@_typename" required />
+            </div>
+        </div>
+
+        <div class="row mb-1 align-items-center">
+            <Label Class="col-sm-3" For="parentId" HelpText="Select the parentId for this item." ResourceKey="Label.ParentId" />
+            <div class="col-sm-9">
+                <select id="parentId" class="form-select" @bind="_parentId" required>
+                    <option value="-1" selected>@Localizer["SelectParent"]</option>
+                    @RenderOptions(ParentItems)
+                </select>
+                <div class="invalid-feedback">@Localizer["Validation.ParentId.Required"]</div>
+            </div>
+        </div>
+
+
+        <div class="row mb-1 align-items-center">
+            <Label Class="col-sm-3" For="typeDescription" HelpText="Enter a Type Description" ResourceKey="TypeDescription">Type Description: </Label>
+            <div class="col-sm-9">
+                <input id="typeDescription" class="form-control" @bind="@_typeDescription" />
+            </div>
+        </div>
+
+        <div class="row mb-1 align-items-center">
+            <Label Class="col-sm-3" For="imageURL" HelpText="Enter a ImageURL" ResourceKey="ImageURL">Image: </Label>
+            <div class="col-sm-9">
+                <input id="imageURL" class="form-control" @bind="@_imageURL" />
+            </div>
+        </div>
+
+        <div class="row mb-1 align-items-center">
+            <Label Class="col-sm-3" For="sortOrder" HelpText="Enter the Sort Order" ResourceKey="SortOrder">Sort Order: </Label>
+            <div class="col-sm-9">
+                <input id="sortOrder" class="form-control" @bind="@_sortOrder" required />
+            </div>
+        </div>
+
+        <div class="row mb-1 align-items-center">
+            <Label Class="col-sm-3" For="isActive" HelpText="Enter IsActive" ResourceKey="IsActive">Is Active: </Label>
+            <div class="col-sm-9">
+
+                <input id="isActive" type="checkbox" @bind="@_isActive" />
+            </div>
+        </div>
+
+
+        <div class="row mb-1 align-items-center">
+            <Label Class="col-sm-3" For="isNewItem" HelpText="Enter isNewItem" ResourceKey="IsNewItem">IsNewCompany: </Label>
+            <div class="col-sm-9">
+
+                <input id="isNewItem" type="checkbox" @bind="@_isNewItem" />
+            </div>
+        </div>
+
+
+    </div>
+    <button type="button" class="btn btn-success" @onclick="Save">@Localizer["Save"]</button>  
+    @if (PageState.Action == "Edit")
+    {
+        <button type="button" class="btn btn-danger ms-1" @onclick="Delete">@Localizer["Delete"]</button>
+    }
+    <NavLink class="btn btn-secondary ms-1" href="@ReturnUrl()">@Localizer["Cancel"]</NavLink>
+    <br /><br />
+    @if (PageState.Action == "Edit")
+    {
+    <AuditInfo CreatedBy="@_createdby" CreatedOn="@_createdon" ModifiedBy="@_modifiedby" ModifiedOn="@_modifiedon"></AuditInfo>
+    }
+</form>
+
+@code {
+    public override SecurityAccessLevel SecurityAccessLevel => SecurityAccessLevel.Edit;
+
+    public override string Actions => "Add,Edit";
+
+    public override string Title => "Manage Business Directory Types";
+
+    public override List<Resource> Resources => new List<Resource>()
+    {
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "Module.css" }
+    };
+
+    private ElementReference form;
+    private bool validated = false;
+
+    private int _id;
+    private string _typename;
+    private string _typeDescription;
+    private string _imageURL;
+    private int _sortOrder;
+    private bool _isActive;
+    private bool _isNewItem;
+   // private int _parentId;
+
+
+
+    private string _createdby;
+    private DateTime _createdon;
+    private string _modifiedby;
+    private DateTime _modifiedon;
+
+    private List<BusinessType> ParentItems = new();
+
+    private int _parentId = -1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            
+            int moduleId = PageState.ModuleId /* get your ModuleId here */;
+           // ParentItems = await BusinessDirectoryService.GetBusinessDirectorysAsync(moduleId);
+            ParentItems = BuildTree(await BusinessDirectoryService.GetBusinessDirectorysAsync(moduleId));
+
+
+            if (PageState.Action == "Edit")
+            {
+                _id = Int32.Parse(PageState.QueryString["id"]);
+                BusinessType BusinessDirectory = await BusinessDirectoryService.GetBusinessDirectoryAsync(_id, ModuleState.ModuleId);
+                if (BusinessDirectory != null)
+                {
+                    _typename = BusinessDirectory.TypeName;
+                    _typeDescription = BusinessDirectory.TypeDescription;
+                    _imageURL = BusinessDirectory.ImageURL;
+                    _sortOrder = BusinessDirectory.SortOrder;
+                    _isActive = BusinessDirectory.IsActive;
+                    _isNewItem = BusinessDirectory.IsNewItem;
+                    _parentId = BusinessDirectory.ParentId;
+                    _createdby = BusinessDirectory.CreatedBy;
+                    _createdon = BusinessDirectory.CreatedOn;
+                    _modifiedby = BusinessDirectory.ModifiedBy;
+                    _modifiedon = BusinessDirectory.ModifiedOn;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error Loading BusinessDirectory {BusinessDirectoryId} {Error}", _id, ex.Message);
+            AddModuleMessage(Localizer["Message.LoadError"], MessageType.Error);
+        }
+    }
+
+    private async Task Save()
+    {
+        try
+        {
+            validated = true;
+            var interop = new Oqtane.UI.Interop(JSRuntime);
+            if (await interop.FormValid(form))
+            {
+                if (PageState.Action == "Add")
+                {
+                    BusinessType BusinessDirectory = new BusinessType();
+                    BusinessDirectory.ModuleId = ModuleState.ModuleId;
+                    BusinessDirectory.TypeName = _typename;
+                    BusinessDirectory.ImageURL = _imageURL;
+                    BusinessDirectory.TypeDescription = _typeDescription;
+                    BusinessDirectory.SortOrder = _sortOrder;
+                    BusinessDirectory.IsActive = _isActive;
+                    BusinessDirectory.IsNewItem = _isNewItem;
+                    BusinessDirectory.ParentId = _parentId;
+                    
+                    
+                    BusinessDirectory = await BusinessDirectoryService.AddBusinessDirectoryAsync(BusinessDirectory);
+                    await logger.LogInformation("BusinessDirectory Added {BusinessDirectory}", BusinessDirectory);
+                }
+                else
+                {
+                    BusinessType BusinessDirectory = await BusinessDirectoryService.GetBusinessDirectoryAsync(_id, ModuleState.ModuleId);
+                    BusinessDirectory.TypeName = _typename;
+                    BusinessDirectory.ImageURL = _imageURL;
+                    BusinessDirectory.TypeDescription = _typeDescription;
+                    BusinessDirectory.SortOrder = _sortOrder;
+                    BusinessDirectory.IsActive = _isActive;
+                    BusinessDirectory.IsNewItem = _isNewItem;
+                    BusinessDirectory.ParentId = _parentId;
+                    await BusinessDirectoryService.UpdateBusinessDirectoryAsync(BusinessDirectory);
+                    await logger.LogInformation("BusinessDirectory Updated {BusinessDirectory}", BusinessDirectory);
+                }
+                
+                NavigationManager.NavigateTo(ReturnUrl());
+            }
+            else
+            {
+                AddModuleMessage(Localizer["Message.SaveValidation"], MessageType.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error Saving BusinessDirectory {Error}", ex.Message);
+            AddModuleMessage(Localizer["Message.SaveError"], MessageType.Error);
+        }
+    }
+
+    private async Task Delete()
+    {
+        try
+        {
+            if (await JSRuntime.InvokeAsync<bool>("confirm", Localizer["Message.DeleteConfirm"].Value))
+            {
+                BusinessType BusinessDirectory = await BusinessDirectoryService.GetBusinessDirectoryAsync(_id, ModuleState.ModuleId);
+                await BusinessDirectoryService.DeleteBusinessDirectoryAsync(BusinessDirectory.TypeId, ModuleState.ModuleId);
+                await logger.LogInformation("BusinessDirectory Deleted {BusinessDirectoryId}", _id);
+                NavigationManager.NavigateTo(ReturnUrl());
+            }
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error Deleting BusinessDirectory {BusinessDirectoryId} {Error}", _id, ex.Message);
+            AddModuleMessage(Localizer["Message.DeleteError"], MessageType.Error);
+        }
+    }
+
+    private List<BusinessType> BuildTree(List<BusinessType> flatList)
+    {
+        var lookup = flatList.ToDictionary(x => x.TypeId);
+        var rootItems = new List<BusinessType>();
+
+        foreach (var item in flatList)
+        {
+            if (item.ParentId == 0 || !lookup.ContainsKey(item.ParentId))
+            {
+                rootItems.Add(item);
+            }
+            else
+            {
+                lookup[item.ParentId].Children.Add(item);
+            }
+        }
+        return rootItems;
+    }
+
+    private RenderFragment RenderOptions(IEnumerable<BusinessType> items, int level = 0) => builder =>
+{
+    int seq = 0;
+    foreach (var item in items)
+    {
+        builder.OpenElement(seq++, "option");
+        builder.AddAttribute(seq++, "value", item.TypeId);
+        builder.AddContent(seq++, new string('\u00A0', level * 4) + item.TypeName); // Indent with non-breaking spaces
+        builder.CloseElement();
+
+        if (item.Children != null && item.Children.Count > 0)
+        {
+            builder.AddContent(seq++, RenderOptions(item.Children, level + 1));
+        }
+    }
+};
+
+    private string ReturnUrl()
+    {
+        return (!string.IsNullOrEmpty(NavigateUrl() + "/*/" + ModuleState.ModuleId + "/Types")) ? NavigateUrl() + "/*/" + ModuleState.ModuleId + "/Types" : NavigateUrl();
+    }
+}

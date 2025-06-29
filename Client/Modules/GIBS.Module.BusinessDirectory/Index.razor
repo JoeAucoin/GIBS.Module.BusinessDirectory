@@ -1,0 +1,371 @@
+@using GIBS.Module.BusinessDirectory.Services
+@using GIBS.Module.BusinessDirectory.Models
+@using GIBS.Module.BusinessDirectory.Interfaces
+@using System.ComponentModel.DataAnnotations.Schema
+
+@namespace GIBS.Module.BusinessDirectory
+@inherits ModuleBase
+@inject IBusinessDirectoryService BusinessDirectoryService
+@inject IBusinessCompanyService BusinessCompanyService
+@inject NavigationManager NavigationManager
+@inject IStringLocalizer<Index> Localizer
+@inject ISettingService SettingService
+
+<p class="text-center">
+    <ActionLink Action="Types" Security="SecurityAccessLevel.Edit" Text="View Types" ResourceKey="Types" />
+    <ActionLink Action="Company" Security="SecurityAccessLevel.Edit" Text="View Companies" ResourceKey="Companies" />
+</p>
+
+<div class="container" id="gibs">
+    <div class="row">
+        <div class="col-lg-9">
+
+            @if (_selectedCompanyId.HasValue)
+            {
+                @if (_companyInfo != null)
+                {
+                    @if (!string.IsNullOrWhiteSpace(_companyInfo.Website))
+                    {
+                        <div class="company-details-website">
+                            <h2 class="company-section-title">
+                                <a href="@_companyInfo.Website" title="@_companyInfo.CompanyName" target="_blank">@_typeInfo.TypeDescription</a>
+                            </h2>
+                        </div>
+                    }
+                    else
+                    {
+                        <h2 class="company-section-title">@_typeInfo.TypeDescription</h2>
+                    }
+
+                    <div class="company-details-card">
+                        <div class="row align-items-start">
+                            <div class="col-md-7">
+                                <div class="mb-2">
+                                    <div class="company-details-header">
+                                        <img src="@ModulePath()/images/icon.png" alt="" class="company-icon" />
+                                        <span>
+                                            @_companyInfo.CompanyName
+                                            <ActionLink Action="CompanyEdit"
+                                                Parameters="@($"id={_companyInfo.CompanyId}")" ReturnUrl="@ReturnUrl()"
+                                                Security="SecurityAccessLevel.Edit" Text="Edit" IconName="pencil" IconOnly Class="btn btn-outline-secondary btn-sm"
+                                                ResourceKey="CompanyEdit" />
+                                        </span>
+                                    </div>
+                                     </div>
+                                    <div class="company-details-address mb-1">
+                                        @_companyInfo.Address<br />
+                                        @_companyInfo.City, @_companyInfo.State @_companyInfo.ZipCode
+                                    
+                                    </div>
+                                
+                                @if (!string.IsNullOrWhiteSpace(_companyInfo.Phone))
+                                {
+                                    <div class="company-details-phone mb-1">
+                                        @Localizer["Phone"]: @_companyInfo.Phone
+                                    </div>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(_companyInfo.Website))
+                                {
+                                    <div class="company-details-website mb-1">
+                                        <a href="@_companyInfo.Website" target="_blank">@_companyInfo.Website</a>
+                                    </div>
+                                }
+
+                            </div>
+                            <div class="col-md-5 text-center text-md-end mb-md-0">
+                                <img src="@(string.IsNullOrWhiteSpace(_companyInfo.ImageURL) ? ModulePath() + "/images/no-image.png" : _companyInfo.ImageURL)"
+                                     alt="@_companyInfo.CompanyName"
+                                     class="company-details-image img-fluid rounded" />
+                            </div>
+                        </div>
+                        @if (_companyInfo.Latitude != 0 && _companyInfo.Longitude != 0)
+                        {
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="company-details-description mb-2" style="white-space: pre-line;">
+                                        @_companyInfo.Description
+                                    </div>
+                                    <div class="company-details-map">
+                                        <iframe 
+                                                height="400"
+                                                style="border:0;width:100%"
+                                                loading="lazy"
+                                                allowfullscreen
+                                                referrerpolicy="no-referrer-when-downgrade"
+                                                src="https://www.google.com/maps/embed/v1/place?key=@_apiKey&q=@_companyInfo.Latitude,@_companyInfo.Longitude,@Uri.EscapeDataString($"{_companyInfo.CompanyName}, {_companyInfo.Address}, {_companyInfo.City}, {_companyInfo.State} {_companyInfo.ZipCode}")&zoom=17&maptype=roadmap">
+                                        </iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning">@Localizer["NoCompaniesFound"]</div>
+                }
+            }
+            else
+            {
+                @* Show FEATURED/NEW companies if no type or company is selected *@
+                @if (!_selectedTypeId.HasValue)
+                {
+                    <div class="row">
+                        @if (_newCompanies == null)
+                        {
+                            <div class="col-12"><em>@Localizer["LoadingCompanies"]</em></div>
+                        }
+                        else if (_newCompanies.Count == 0)
+                        {
+                            <div class="col-12">@Localizer["NoCompaniesFound"]</div>
+                        }
+                        else
+                        {
+                            <h3>@Localizer["NewCompanies"]</h3>
+                            @foreach (var company in _newCompanies)
+                            {
+                                <div class="col-lg-4 col-md-6 col-sm-6 mb-3">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs">@company.CompanyName</a>
+                                                <ActionLink Action="CompanyEdit"
+                                                            Parameters="@($"id={company.CompanyId}")" ReturnUrl="@ReturnUrl()"
+                                                            Security="SecurityAccessLevel.Edit" Text="Edit" IconName="pencil" IconOnly Class="btn btn-outline-secondary btn-sm"
+                                                            ResourceKey="CompanyEdit" />
+                                            </h5>
+                                            @if (!string.IsNullOrWhiteSpace(company.Address))
+                                            {
+                                                <div class="card-text">@company.Address<br /> @company.City, @company.State @company.ZipCode</div>
+                                            }
+                                            @if (!string.IsNullOrWhiteSpace(company.TypeDescription))
+                                            {
+                                                <p class="typeDescription"><a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs" class="typeDescription">@company.TypeDescription</a></p>
+                                            }
+                                            <div class="text-center">
+                                                <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs" class="btn btn-outline-secondary btn-sm">View Details</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
+
+                @* Show companies by type if a type is selected *@
+               @if (_selectedTypeId.HasValue && _companies != null && _companies.Count > 0)
+                {
+                    <h3>@_typeInfo?.TypeName ~ @_typeDescription</h3>
+                    <div>
+                        @{ int rowNumber = 0; }
+                        @foreach (var company in _companies)
+                        {
+                            <div class="row company-listing-row @(rowNumber % 2 == 0 ? "company-listing-alt" : "")">
+                                <div class="col-lg-2 col-md-2 col-sm-5 company-listing-img text-center">
+                                    <img src="@(string.IsNullOrWhiteSpace(company.ImageURL) ? ModulePath() + "/images/no-image.png" : company.ImageURL)"
+                                         alt="@company.CompanyName" />
+                                </div>
+                                <div class="col-lg-7 col-md-7 col-sm-5 company-listing-info">
+                                    <div class="company-listing-title">
+                                        <img src="@ModulePath()/images/icon.png" alt="" class="company-icon" />
+                                        <span>
+                                            <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs"
+                                                 alt="@company.CompanyName">@company.CompanyName</a>
+                                            <ActionLink Action="CompanyEdit"
+                                                        Parameters="@($"id={company.CompanyId}")" ReturnUrl="@ReturnUrl()"
+                                                        Security="SecurityAccessLevel.Edit" Text="Edit" IconName="pencil" IconOnly Class="btn btn-outline-secondary btn-sm"
+                                                        ResourceKey="CompanyEdit" />
+                                        </span>
+                                    </div>
+                                    <div class="company-listing-address">
+                                        @if (!string.IsNullOrWhiteSpace(company.Address))
+                                        {
+                                            @company.Address
+                                            <br />
+                                        }
+                                        @company.City, @company.State @company.ZipCode
+                                    </div>
+                                    <div class="company-listing-type">
+                                        @company.TypeDescription
+                                    </div>
+                                </div>
+                                <div class="col-lg-2 col-md-2 col-sm-11 company-listing-actions">
+                                    <div class="text-center">
+                                        <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs" class="btn btn-outline-secondary btn-sm">View Details</a>
+                                    </div>
+
+                                </div>
+                            </div>
+                           rowNumber++; 
+                        }
+                    </div>
+                }
+                else if (_selectedTypeId.HasValue && (_companies == null || _companies.Count == 0))
+                {
+                    <div class="alert alert-info">@Localizer["NoCompaniesFound"]</div>
+                }
+
+                @if (!_selectedTypeId.HasValue && (_newCompanies == null || _newCompanies.Count == 0))
+                {
+                    <p class="text-center">@Localizer["SelectBusinessTypeToViewCompanies"]</p>
+                }
+            }
+        </div>
+        <div class="col-lg-3" style="padding-left: 20px; padding-top: 40px;">
+            @RenderNavigation(ParentItems)
+        </div>
+    </div>
+
+</div>
+
+
+@code {
+    public override string RenderMode => RenderModes.Static;
+
+    public override List<Resource> Resources => new List<Resource>()
+    {
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "Module.css" },
+        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + "Module.js" }
+    };
+
+    public interface IAuditable
+    {
+        string CreatedBy { get; set; }
+        DateTime CreatedOn { get; set; }
+        string ModifiedBy { get; set; }
+        DateTime ModifiedOn { get; set; }
+    }
+
+
+    List<BusinessType> _BusinessDirectorys;
+    private List<BusinessType> ParentItems = new();
+  //  private int _parentId = -1;
+    private int _featuredCount = 3; // Default value for featured count
+    private string _apiKey = "";
+
+    private List<BusinessCompany> _companies;
+    private int? _selectedTypeId;
+    private int? _selectedCompanyId;
+
+    private List<BusinessCompany> _newCompanies;
+
+    private BusinessType _typeInfo;
+    private string _typeDescription;
+
+    private BusinessCompany _companyInfo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            string featuredCount = SettingService.GetSetting(ModuleState.Settings, "FeaturedCount", "");
+            _apiKey = SettingService.GetSetting(ModuleState.Settings, "GoogleApiKey", "");
+            if (!string.IsNullOrWhiteSpace(featuredCount) && int.TryParse(featuredCount, out var count))
+            {
+                _featuredCount = count;
+            }
+
+            ParentItems = BuildTree(await BusinessDirectoryService.GetBusinessDirectorysAsync(ModuleState.ModuleId));
+            _BusinessDirectorys = await BusinessDirectoryService.GetBusinessDirectorysAsync(ModuleState.ModuleId);
+
+            // Parse typeId from query string
+            if (PageState.QueryString.ContainsKey("typeId") && int.TryParse(PageState.QueryString["typeId"], out var typeId))
+            {
+                _selectedTypeId = typeId;
+                _selectedCompanyId = null;
+                _typeInfo = await BusinessDirectoryService.GetBusinessDirectoryAsync(typeId, ModuleState.ModuleId);
+                if (_typeInfo == null)
+                {
+                    AddModuleMessage(Localizer["Message.TypeNotFound"], MessageType.Error);
+                }
+                else
+                {
+                    _typeDescription = _typeInfo.TypeDescription;
+                    SetPageTitle(_typeInfo.TypeName + " > " + _typeDescription);
+                }
+                _companies = await BusinessCompanyService.GetBusinessCompaniesByTypeAsync(typeId, ModuleState.ModuleId);
+            }
+            // Parse companyId from query string
+            else if (PageState.QueryString.ContainsKey("companyid") && int.TryParse(PageState.QueryString["companyid"], out var companyId))
+            {
+                _selectedTypeId = null;
+                _selectedCompanyId = companyId;
+                _companyInfo = await BusinessCompanyService.GetBusinessCompanyAsync(companyId, ModuleState.ModuleId);
+
+                if (_companyInfo != null)
+                {
+                    _typeInfo = await BusinessDirectoryService.GetBusinessDirectoryAsync(_companyInfo.TypeId, ModuleState.ModuleId);
+                    _typeDescription = _typeInfo?.TypeDescription;
+                    SetPageTitle(_companyInfo.CompanyName + " > " + _typeDescription);
+                }
+            }
+            else
+            {
+                _selectedCompanyId = null;
+                _selectedTypeId = null;
+                _companies = null;
+                _newCompanies = (await BusinessCompanyService.GetBusinessCompaniesByIsNewItemAsync(ModuleState.ModuleId))
+                    .Where(a => a.IsActive)
+                    .OrderByDescending(a => a.ModifiedOn)
+                    .Take(_featuredCount)
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error Loading Business Directory Type {Error}", ex.Message);
+            AddModuleMessage(Localizer["Message.LoadError"], MessageType.Error);
+        }
+    }
+
+    private List<BusinessType> BuildTree(List<BusinessType> flatList)
+    {
+        foreach (var item in flatList)
+        {
+            if (item.Children == null)
+                item.Children = new List<BusinessType>();
+        }
+
+        var lookup = flatList.ToDictionary(x => x.TypeId);
+        var rootItems = new List<BusinessType>();
+
+        foreach (var item in flatList)
+        {
+            if (item.ParentId == -1 || !lookup.ContainsKey(item.ParentId))
+            {
+                rootItems.Add(item);
+            }
+            else
+            {
+                lookup[item.ParentId].Children.Add(item);
+            }
+        }
+        return rootItems;
+    }
+
+    private RenderFragment RenderNavigation(IEnumerable<BusinessType> items, int level = 0) => builder =>
+    {
+        int seq = 0;
+        foreach (var item in items)
+        {
+            builder.OpenElement(seq++, "div");
+            builder.OpenElement(seq++, "a");
+            builder.AddAttribute(seq++, "href", NavigateUrl() + $"?typeId={item.TypeId}#gibs");
+            builder.AddAttribute(seq++, "class", "typeLinks");
+            builder.AddContent(seq++, new string('\u00A0', level * 4) + item.TypeName);
+            builder.CloseElement(); // a
+            builder.CloseElement(); // div
+
+            if (item.Children != null && item.Children.Count > 0)
+            {
+                builder.AddContent(seq++, RenderNavigation(item.Children, level + 1));
+            }
+        }
+    };
+
+    private string ReturnUrl()
+    {
+        return NavigateUrl(); // Returns the current URL
+    }
+}

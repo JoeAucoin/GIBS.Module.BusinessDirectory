@@ -1,0 +1,59 @@
+@namespace GIBS.Module.BusinessDirectory
+@inherits ModuleBase
+@inject ISettingService SettingService
+@inject IStringLocalizer<Settings> Localizer
+
+<div class="container">
+    <div class="row mb-1 align-items-center">
+        <Label Class="col-sm-3" For="googleApiKey" HelpText="Enter a Google ApiKey" ResourceKey="GoogleApiKey" ResourceType="@resourceType">Name: </Label>
+            <div class="col-sm-9">
+            <input id="googleApiKey" type="text" class="form-control" @bind="@_googleApiKey" />
+            </div>
+    </div>
+
+    <div class="row mb-1 align-items-center">
+        <Label Class="col-sm-3" For="featuredCount" HelpText="How many featured properties should display?" ResourceKey="FeaturedCount" ResourceType="@resourceType">Name: </Label>
+        <div class="col-sm-9">
+            <input id="featuredCount" type="text" class="form-control" @bind="@_featuredCount" />
+        </div>
+    </div>
+</div>
+
+@code {
+
+    private string resourceType = "GIBS.Module.BusinessDirectory.Settings, GIBS.Module.BusinessDirectory.Client.Oqtane"; // for localization
+    public override string Title => "Business Directory Settings";
+
+    string _googleApiKey;
+
+    string _featuredCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Dictionary<string, string> settings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
+            _googleApiKey = SettingService.GetSetting(settings, "GoogleApiKey", "");
+            _featuredCount = SettingService.GetSetting(settings, "FeaturedCount", "3");
+        }
+        catch (Exception ex)
+        {
+            AddModuleMessage(ex.Message, MessageType.Error);
+        }
+    }
+
+    public async Task UpdateSettings()
+    {
+        try
+        {
+            Dictionary<string, string> settings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
+            SettingService.SetSetting(settings, "GoogleApiKey", _googleApiKey);
+            SettingService.SetSetting(settings, "FeaturedCount", _featuredCount);
+            await SettingService.UpdateModuleSettingsAsync(settings, ModuleState.ModuleId);
+        }
+        catch (Exception ex)
+        {
+            AddModuleMessage(ex.Message, MessageType.Error);
+        }
+    }
+}

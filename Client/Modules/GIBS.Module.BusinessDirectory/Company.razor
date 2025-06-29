@@ -1,0 +1,94 @@
+﻿@using GIBS.Module.BusinessDirectory.Interfaces
+@using GIBS.Module.BusinessDirectory.Models
+@using GIBS.Module.BusinessDirectory.Services
+@using Oqtane.Modules.Controls
+@using System.Globalization
+@using System.Linq
+
+@namespace GIBS.Module.BusinessDirectory
+@inherits ModuleBase
+@inject IBusinessCompanyService BusinessCompanyService
+@* @inject IBusinessDirectoryService BusinessDirectoryService *@
+@inject NavigationManager NavigationManager
+@inject IStringLocalizer<Company> Localizer
+
+<h3>@Localizer["Companies"]</h3>
+
+
+<div><ActionLink Action="CompanyEdit" Security="SecurityAccessLevel.Edit" Class="btn btn-primary" ResourceKey="AddCompany" Text="@Localizer["AddCompany"]" /></div>
+
+@if (_companies == null)
+{
+    <p><em>@Localizer["Loading"]...</em></p>
+}
+else if (_companies.Count == 0)
+{
+    <p>@Localizer["NoCompaniesFound"]</p>
+}
+else
+{
+
+    <Pager Items="@_companies" PageSize="10" Class="table table-striped">
+        <Header>
+        <th style="width: 1px;"></th>
+        <th style="width: 1px;"></th>
+        <th>@Localizer["TypeName"]</th>
+        <th>@Localizer["Name"]</th>
+        <th>@Localizer["City"]</th>
+        <th>@Localizer["State"]</th>
+        <th>@Localizer["Phone"]</th>
+        <th>@Localizer["IsActive"]</th>
+        </Header>
+        <Row>
+            <td><ActionLink Action="CompanyEdit" Parameters=@($"id={context.CompanyId}") ResourceKey="CompanyEdit" Text="Edit" IconName="pencil" IconOnly /></td>
+            <td><ActionDialog Header="@Localizer["Dialog.DeleteCompanyHeader"]"
+                              Message="@Localizer["Dialog.DeleteCompanyMessage", context.CompanyName]" Action="Delete" IconName="delete" IconOnly Security="SecurityAccessLevel.Edit" Class="btn btn-danger"
+                              OnClick="@(async () => await DeleteCompany(context))" ResourceKey="Delete" Id="@context.CompanyId.ToString()" /></td>
+            <td>@context.TypeName</td>
+            <td>@context.CompanyName</td>
+            <td>@context.City</td>
+            <td>@context.State</td>
+            <td>@context.Phone</td>
+            <td><input type="checkbox" checked="@context.IsActive" disabled /></td>
+            
+        </Row>
+    </Pager>
+ }
+
+@code {
+    
+    public override string Title => Localizer?["PageTitle.ManageCompanies"] ?? "Manage Companies";
+
+    public override List<Resource> Resources => new List<Resource>()
+    {
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "Module.css" }
+    };
+
+    private List<BusinessCompany> _companies;
+
+    protected override async Task OnInitializedAsync()
+    {
+         int moduleId = ModuleState.ModuleId;
+         _companies = (await BusinessCompanyService.GetBusinessCompaniesAsync(moduleId)).ToList();
+       //await LoadCompanies();
+    }
+
+    private async Task DeleteCompany(BusinessCompany company)
+    {
+        try
+        {
+            int moduleId = ModuleState.ModuleId;
+            //await BusinessCompanyService.DeleteBusinessCompanyAsync(moduleId, company.CompanyId);
+            await BusinessCompanyService.DeleteBusinessCompanyAsync(company.CompanyId, moduleId);
+          //  _companies.Remove(company);
+            _companies = (await BusinessCompanyService.GetBusinessCompaniesAsync(moduleId)).ToList();
+            AddModuleMessage(Localizer["Message.DeleteSuccess"], MessageType.Success);
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error deleting company {CompanyName}: {Error}", company.CompanyName, ex.Message);
+            AddModuleMessage(Localizer["Message.DeleteError"], MessageType.Error);
+        }
+    }
+    
+}
