@@ -1,6 +1,4 @@
-﻿using GIBS.Module.BusinessDirectory.Interfaces;
-
-using Oqtane.Enums;
+﻿using Oqtane.Enums;
 using Oqtane.Modules;
 using Oqtane.Services;
 using Oqtane.Shared;

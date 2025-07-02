@@ -14,7 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\oqtane.framework-6.1.2-Source\Oqtane.Server\Oqtane.Server.csproj" />
     <ProjectReference Include="..\Client\GIBS.Module.BusinessDirectory.Client.csproj" />
     <ProjectReference Include="..\Server\GIBS.Module.BusinessDirectory.Server.csproj" />
     <ProjectReference Include="..\Shared\GIBS.Module.BusinessDirectory.Shared.csproj" />

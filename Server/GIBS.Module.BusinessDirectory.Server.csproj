@@ -30,10 +30,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Oqtane.Server">
+    <Reference Include="Oqtane.Server" >
       <HintPath>..\..\oqtane.framework-6.1.2-Source\Oqtane.Server\bin\Debug\net9.0\Oqtane.Server.dll</HintPath>
     </Reference>
-    <Reference Include="Oqtane.Shared">
+    <Reference Include="Oqtane.Shared" >
       <HintPath>..\..\oqtane.framework-6.1.2-Source\Oqtane.Server\bin\Debug\net9.0\Oqtane.Shared.dll</HintPath>
     </Reference>
   </ItemGroup>

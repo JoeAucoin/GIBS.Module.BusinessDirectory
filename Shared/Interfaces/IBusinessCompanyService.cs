@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 
 
-namespace GIBS.Module.BusinessDirectory.Interfaces
+namespace GIBS.Module.BusinessDirectory.Services
 {
     public interface IBusinessCompanyService
     {

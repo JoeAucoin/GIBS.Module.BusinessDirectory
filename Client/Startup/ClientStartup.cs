@@ -1,4 +1,3 @@
-using GIBS.Module.BusinessDirectory.Interfaces;
 using GIBS.Module.BusinessDirectory.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Oqtane.Services;

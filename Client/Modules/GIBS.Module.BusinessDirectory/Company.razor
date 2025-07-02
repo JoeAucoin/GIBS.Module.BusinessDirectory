@@ -1,5 +1,4 @@
-﻿@using GIBS.Module.BusinessDirectory.Interfaces
-@using GIBS.Module.BusinessDirectory.Models
+﻿@using GIBS.Module.BusinessDirectory.Models
 @using GIBS.Module.BusinessDirectory.Services
 @using Oqtane.Modules.Controls
 @using System.Globalization
@@ -54,6 +53,8 @@ else
         </Row>
     </Pager>
  }
+
+<div><NavLink class="btn btn-secondary" href="@NavigateUrl()">@Localizer["Return"]</NavLink></div>
 
 @code {
     

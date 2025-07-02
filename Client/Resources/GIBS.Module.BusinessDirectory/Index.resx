@@ -144,4 +144,7 @@
   <data name="ViewDetails" xml:space="preserve">
     <value>View Company Details</value>
   </data>
+  <data name="NoCompaniesFound" xml:space="preserve">
+    <value>No Companies Found In This Category</value>
+  </data>
 </root>
