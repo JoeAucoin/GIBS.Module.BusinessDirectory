@@ -1,0 +1,203 @@
+@using Oqtane.Modules.Controls
+@using GIBS.Module.BusinessDirectory.Services
+@using GIBS.Module.BusinessDirectory.Models
+@using Oqtane.UI
+@using Oqtane.Shared
+@using Oqtane.Enums
+@using System.ComponentModel.DataAnnotations
+@using System.Linq
+@using Microsoft.AspNetCore.Components.Authorization
+
+@namespace GIBS.Module.BusinessDirectory
+@inherits ModuleBase
+@inject IBAttributeService BAttributeService
+@inject NavigationManager NavigationManager
+@inject IStringLocalizer<AttributeEdit> Localizer
+
+
+@if (_initialized)
+{
+    <form @ref="_form" class="@(_validated ? "was-validated" : "needs-validation")" novalidate>
+        <div class="container">
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="attributeName" HelpText="Enter the name for the attribute." ResourceKey="Label.AttributeName">@Localizer["Label.AttributeName"]</Label>
+                <div class="col-sm-9">
+                    <input id="attributeName" class="form-control" @bind="@_attribute.AttributeName" required />
+                    <div class="invalid-feedback">@Localizer["Validation.AttributeName.Required"]</div>
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="attributeDescription" HelpText="Enter a description for the attribute." ResourceKey="Label.AttributeDescription">Description: </Label>
+                <div class="col-sm-9">
+                    <textarea id="attributeDescription" class="form-control" @bind="@_attribute.AttributeDescription"></textarea>
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="attributeIcon" HelpText="Enter an icon class (e.g., 'oi oi-cog')." ResourceKey="Label.AttributeIcon">Icon: </Label>
+                <div class="col-sm-9">
+                    <input id="attributeIcon" class="form-control" @bind="@_attribute.AttributeIcon" />
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="attributeCode" HelpText="Enter a code for the attribute." ResourceKey="Label.AttributeCode">Code: </Label>
+                <div class="col-sm-9">
+                    <input id="attributeCode" class="form-control" @bind="@_attribute.AttributeCode" maxlength="2" required />
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="attributeColor" HelpText="Select a color for the attribute." ResourceKey="Label.AttributeColor">Color: </Label>
+                <div class="col-sm-9">
+                    <input id="attributeColor" type="color" class="form-control" @bind="@_attribute.AttributeColor" />
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="sortOrder" HelpText="Enter the display order for this attribute." ResourceKey="SortOrder">Sort Order: </Label>
+                <div class="col-sm-9">
+                    <input id="sortOrder" type="number" class="form-control" @bind="@_attribute.SortOrder" required />
+                    <div class="invalid-feedback">@Localizer["Validation.SortOrder.Required"]</div>
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="isActive" HelpText="Check if this attribute is active." ResourceKey="Label.IsActive">Is Active: </Label>
+                <div class="col-sm-9">
+                    <input id="isActive" type="checkbox" class="form-check-input" @bind="@_attribute.IsActive" />
+                </div>
+            </div>
+        </div>
+        <br />
+        <button type="button" class="btn btn-success" @onclick="SaveAttribute">@Localizer["Save.Text"]</button>
+        <NavLink class="btn btn-secondary" href="@ReturnUrl()">@Localizer["Cancel.Text"]</NavLink>
+
+        @if (_isEditMode && _attribute != null && _attribute.AttributeId != 0)
+        {
+            <hr />
+            <AuditInfo CreatedBy="@_attribute.CreatedBy" CreatedOn="@_attribute.CreatedOn" ModifiedBy="@_attribute.ModifiedBy" ModifiedOn="@_attribute.ModifiedOn"></AuditInfo>
+        }
+    </form>
+}
+else
+{
+    <p><em>@Localizer["Loading.Text"]</em></p>
+}
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    public override string RenderMode => RenderModes.Interactive;
+    public override SecurityAccessLevel SecurityAccessLevel => SecurityAccessLevel.Edit;
+    public override string Actions => "AttributeEdit";
+    public override string Title => _isEditMode ? (Localizer?["PageTitle.EditAttribute"] ?? "Edit Attribute") : (Localizer?["PageTitle.AddAttribute"] ?? "Add Attribute");
+
+    public override List<Resource> Resources => new List<Resource>()
+    {
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "Module.css" },
+        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + "Module.js" }
+    };
+
+    private BAttribute _attribute = new BAttribute();
+
+    private ElementReference _form;
+    private bool _validated = false;
+    private bool _isEditMode = false;
+    private bool _initialized = false;
+    private string CurrentUserName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            CurrentUserName = user.Identity.Name;
+        }
+        else
+        {
+            CurrentUserName = "Anonymous";
+        }
+
+        try
+        {
+            if (PageState.QueryString.ContainsKey("id") && int.TryParse(PageState.QueryString["id"], out int attributeId))
+            {
+                _isEditMode = true;
+                _attribute = await BAttributeService.GetAttributeAsync(attributeId);
+                if (_attribute == null)
+                {
+                    AddModuleMessage(Localizer["Error.LoadAttribute.NotFound", attributeId.ToString()], MessageType.Error);
+                    NavigationManager.NavigateTo(NavigateUrl("Attribute"));
+                    return;
+                }
+            }
+            else
+            {
+                _isEditMode = false;
+                _attribute = new BAttribute
+                {
+                    IsActive = true,
+                    ModuleId = ModuleState.ModuleId,
+                    AttributeColor = "#FF0000",
+                    SortOrder = 10
+                };
+            }
+            _initialized = true;
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error loading attribute edit page");
+            AddModuleMessage(Localizer["Error.PageLoad"] + $": {ex.Message}", MessageType.Error);
+            _initialized = true;
+        }
+    }
+
+    private string ReturnUrl()
+    {
+        if (ModuleState != null)
+        {
+            return (!string.IsNullOrEmpty(NavigateUrl() + "/*/" + ModuleState.ModuleId + "/Attribute")) ? NavigateUrl() + "/*/" + ModuleState.ModuleId + "/Attribute" : NavigateUrl();
+        }
+        return NavigateUrl();
+    }
+
+    private async Task SaveAttribute()
+    {
+        _validated = true;
+        var formIsValid = await JSRuntime.InvokeAsync<bool>("interopFormValid", _form);
+
+        if (!formIsValid)
+        {
+            AddModuleMessage(Localizer["Error.Validation"], MessageType.Warning);
+            return;
+        }
+
+        try
+        {
+            if (_isEditMode)
+            {
+                _attribute.ModifiedBy = CurrentUserName;
+                await BAttributeService.UpdateAttributeAsync(_attribute);
+                AddModuleMessage(Localizer["Success.Update"], MessageType.Success);
+            }
+            else
+            {
+                _attribute.CreatedBy = CurrentUserName;
+                _attribute.ModuleId = ModuleState.ModuleId;
+                await BAttributeService.AddAttributeAsync(_attribute);
+                AddModuleMessage(Localizer["Success.Add"], MessageType.Success);
+            }
+            NavigationManager.NavigateTo(ReturnUrl());
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error saving attribute");
+            AddModuleMessage(Localizer["Error.Save"] + $": {ex.Message}", MessageType.Error);
+        }
+    }
+}

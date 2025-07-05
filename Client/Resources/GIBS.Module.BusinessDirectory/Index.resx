@@ -147,4 +147,7 @@
   <data name="NoCompaniesFound" xml:space="preserve">
     <value>No Companies Found In This Category</value>
   </data>
+  <data name="Attributes.Text" xml:space="preserve">
+    <value>Manage Attributes</value>
+  </data>
 </root>

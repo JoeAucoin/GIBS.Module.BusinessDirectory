@@ -1,0 +1,118 @@
+﻿@using GIBS.Module.BusinessDirectory.Models
+@using GIBS.Module.BusinessDirectory.Services
+@using Oqtane.Modules.Controls
+@using System.Globalization
+@using System.Linq
+
+@namespace GIBS.Module.BusinessDirectory
+@inherits ModuleBase
+@inject IBAttributeService BAttributeService
+@inject NavigationManager NavigationManager
+@inject IStringLocalizer<Attribute> Localizer
+
+<h3>@Localizer["Title.ManageAttributes"]</h3>
+
+<div><ActionLink Action="AttributeEdit" Security="SecurityAccessLevel.Edit" Class="btn btn-primary" ResourceKey="AddAttributes" Text="@Localizer["AddAttributes"]" /></div>
+
+@if (_attributes == null)
+{
+    <p><em>@Localizer["LoadingAttributes"]</em></p>
+}
+else if (!_attributes.Any())
+{
+    <p>@Localizer["Message.NoAttributes"]</p>
+}
+else
+{
+    <Pager Items="@_attributes">
+        <Header>
+        <th style="width: 1px;">&nbsp;</th> @* For Edit ActionLink *@
+        <th style="width: 1px;">&nbsp;</th> @* For Delete ActionDialog *@
+        <th>@Localizer["Header.AttributeName"]</th>
+        <th>@Localizer["Header.Description"]</th>
+        <th>@Localizer["Header.Icon"]</th>
+        <th>@Localizer["Header.Code"]</th>
+        <th>@Localizer["Header.Color"]</th>
+        <th>@Localizer["Header.SortOrder"]</th>
+        <th>@Localizer["Header.IsActive"]</th>
+        </Header>
+        <Row>
+            <td><ActionLink Action="AttributeEdit" Parameters="@($"id={context.AttributeId}")" Security="SecurityAccessLevel.Edit" ResourceKey="EditButton" Text="@Localizer["EditButton"]" /></td>
+            <td><ActionDialog Header="@Localizer["Dialog.DeleteAttributeHeader"]" Message="@Localizer["Dialog.DeleteAttributeMessage", context.AttributeName]" Action="Delete" Security="SecurityAccessLevel.Edit" Class="btn btn-danger" OnClick="@(async () => await DeleteAttribute(context))" ResourceKey="Delete" Id="@context.AttributeId.ToString()" /></td>
+            <td>@context.AttributeName</td>
+            <td>@context.AttributeDescription</td>
+            <td><span class="@context.AttributeIcon" style="color: @context.AttributeColor;"></span></td>
+            <td>@context.AttributeCode</td>
+            <td>
+                <div style="background-color: @context.AttributeColor; width: 20px; height: 20px; border: 1px solid #ccc;" />
+            </td>
+            <td>@context.SortOrder</td>
+            <td><input type="checkbox" @bind="context.IsActive" disabled /></td>
+        </Row>
+    </Pager>
+}
+<br />
+<div><NavLink class="btn btn-secondary" href="@NavigateUrl()">@Localizer["Link.Return"]</NavLink></div>
+
+@code {
+    IEnumerable<BAttribute> _attributes;
+    List<BAttribute> _battributes;
+
+    public override List<Resource> Resources => new List<Resource>()
+    {
+        new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "Module.css" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+          //  await logger.LogInformation("Attribute.razor: OnInitializedAsync started.");
+            await LoadMenuAttributes();
+         //   await logger.LogInformation("Attribute.razor: OnInitializedAsync finished.");
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "UNHANDLED ERROR in Attribute.razor OnInitializedAsync: {Error}", ex.ToString());
+            AddModuleMessage(Localizer["Message.LoadError"], MessageType.Error);
+        }
+    }
+
+    private async Task LoadMenuAttributes()
+    {
+        try
+        {
+            int _modID = ModuleState.ModuleId;
+            var result = await BAttributeService.GetAttributesAsync(_modID);
+            _attributes = result ?? new List<BAttribute>();
+
+            if (_attributes == null)
+            {
+                _attributes = new List<BAttribute>();
+             //   await logger.LogWarning("Attribute.razor: attributes list was null after service call for ModuleId: {ModuleId}", ModuleState.ModuleId);
+            }
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Exception in LoadMenuAttributes: {Error}", ex.ToString());
+            AddModuleMessage(Localizer["Message.LoadError"], MessageType.Error);
+        }
+    }
+
+    private async Task DeleteAttribute(BAttribute bAttribute)
+    {
+        try
+        {
+            await BAttributeService.DeleteAttributeAsync(bAttribute.AttributeId);
+            await logger.LogInformation("Business Attribute Deleted: {AttributeName}, ID: {AttributeId}", bAttribute.AttributeName, bAttribute.AttributeId);
+            AddModuleMessage(Localizer["Message.AttributeDeletedSuccess", bAttribute.AttributeName], MessageType.Success);
+            await LoadMenuAttributes();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error deleting  attribute {AttributeId}: {ErrorMessage}", bAttribute.AttributeId, ex.ToString());
+            AddModuleMessage(Localizer["Error.DeleteAttributeError", bAttribute.AttributeName], MessageType.Error);
+        }
+    }
+}

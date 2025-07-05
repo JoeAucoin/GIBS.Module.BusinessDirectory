@@ -1,7 +1,9 @@
-﻿using System;
+﻿using Oqtane.Models;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Oqtane.Models;
+using System.Text.Json.Serialization;
 
 namespace GIBS.Module.BusinessDirectory.Models
 {
@@ -40,5 +42,8 @@ namespace GIBS.Module.BusinessDirectory.Models
 
         [NotMapped]
         public string TypeDescription { get; set; } // Not mapped, for display only
+
+        [InverseProperty("BusinessCompany")]
+        public virtual ICollection<BusinessToAttribute> BusinessToAttribute { get; set; } = new List<BusinessToAttribute>();
     }
 }

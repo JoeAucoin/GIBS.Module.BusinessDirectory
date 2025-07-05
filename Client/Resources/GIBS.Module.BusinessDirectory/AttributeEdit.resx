@@ -117,76 +117,22 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Save.Text" xml:space="preserve">
-    <value>Save</value>
-  </data>
-  <data name="LabelCompanyName.Text" xml:space="preserve">
-    <value>Company Name: </value>
-  </data>
-  <data name="Label.TypeId.Text" xml:space="preserve">
-    <value>Company Type:</value>
-  </data>
-  <data name="SelectType" xml:space="preserve">
-    <value>-- Select Company Type --</value>
-  </data>
   <data name="Cancel.Text" xml:space="preserve">
     <value>Cancel</value>
   </data>
   <data name="Error.Validation" xml:space="preserve">
     <value>Validation Error</value>
   </data>
-  <data name="Label.Address.Text" xml:space="preserve">
-    <value>Address: </value>
+  <data name="Label.AttributeCode.HelpText" xml:space="preserve">
+    <value>Enter a two character code for the attribute.</value>
   </data>
-  <data name="Label.City.Text" xml:space="preserve">
-    <value>City: </value>
+  <data name="Label.AttributeName" xml:space="preserve">
+    <value>Attribute Name</value>
   </data>
-  <data name="Label.Description.Text" xml:space="preserve">
-    <value>Description: </value>
+  <data name="Save.Text" xml:space="preserve">
+    <value>Save</value>
   </data>
-  <data name="Label.Email.Text" xml:space="preserve">
-    <value>E-Mail Address: </value>
-  </data>
-  <data name="Label.ImageURL.Text" xml:space="preserve">
-    <value>Image: </value>
-  </data>
-  <data name="Label.IsActive.Text" xml:space="preserve">
-    <value>Is Active: </value>
-  </data>
-  <data name="Label.IsNewItem.Text" xml:space="preserve">
-    <value>Is Featured Company: </value>
-  </data>
-  <data name="Label.Latitude.Text" xml:space="preserve">
-    <value>Latitude: </value>
-  </data>
-  <data name="Label.LatLongButton.Text" xml:space="preserve">
-    <value>Lookup Lat/Long: </value>
-  </data>
-  <data name="Label.Longitude.Text" xml:space="preserve">
-    <value>Longitude: </value>
-  </data>
-  <data name="Label.Phone.Text" xml:space="preserve">
-    <value>Phone: </value>
-  </data>
-  <data name="Label.SortOrder.Text" xml:space="preserve">
-    <value>Sort Order: </value>
-  </data>
-  <data name="Label.State.Text" xml:space="preserve">
-    <value>State: </value>
-  </data>
-  <data name="Label.Website.Text" xml:space="preserve">
-    <value>Website: </value>
-  </data>
-  <data name="Label.ZipCode.Text" xml:space="preserve">
-    <value>Zip Code: </value>
-  </data>
-  <data name="Validation.CompanyName.Required" xml:space="preserve">
-    <value>Company Name Required</value>
-  </data>
-  <data name="Validation.CompanyType.Required" xml:space="preserve">
-    <value>Company Type Required</value>
-  </data>
-  <data name="Label.Attributes.Text" xml:space="preserve">
-    <value>Attributes:</value>
+  <data name="Validation.AttributeName.Required" xml:space="preserve">
+    <value>Attribute Name is Required</value>
   </data>
 </root>

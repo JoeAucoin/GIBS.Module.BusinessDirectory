@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using Microsoft.EntityFrameworkCore.Migrations.Operations.Builders;
 using Oqtane.Databases.Interfaces;
@@ -14,13 +15,16 @@ namespace GIBS.Module.BusinessDirectory.Migrations.EntityBuilders
         private const string _entityTableName = "GIBSBusinessCompany";
         private readonly PrimaryKey<BusinessEntityBuilder> _primaryKey = new("PK_GIBSBusinessCompany", x => x.CompanyId);
         private readonly ForeignKey<BusinessEntityBuilder> _moduleForeignKey = new("FK_GIBSBusiness_Module", x => x.ModuleId, "Module", "ModuleId", ReferentialAction.Cascade);
-        private readonly ForeignKey<BusinessEntityBuilder> _businessTypeForeignKey = new("FK_GIBSBusiness_Type", x => x.TypeId, "GIBSBusinessDirectoryType", "TypeId", ReferentialAction.NoAction);
+        private readonly ForeignKey<BusinessEntityBuilder> _businessTypeForeignKey = new("FK_GIBSBusiness_Type", x => x.TypeId, _entityTableName.Replace("Company", "Type"), "TypeId", ReferentialAction.NoAction);
+        
         public BusinessEntityBuilder(MigrationBuilder migrationBuilder, IDatabase database) : base(migrationBuilder, database)
         {
             EntityTableName = _entityTableName;
             PrimaryKey = _primaryKey;
             ForeignKeys.Add(_moduleForeignKey);
+            ForeignKeys.Add(_businessTypeForeignKey);
         }
+        
         protected override BusinessEntityBuilder BuildTable(ColumnsBuilder table)
         {
             CompanyId = AddAutoIncrementColumn(table, "CompanyId");
@@ -41,10 +45,12 @@ namespace GIBS.Module.BusinessDirectory.Migrations.EntityBuilders
             IsActive = table.Column<bool>(name: "IsActive", nullable: false, defaultValue: true);
             Latitude = table.Column<double>(name: "Latitude", nullable: false, defaultValue: 0.0);
             Longitude = table.Column<double>(name: "Longitude", nullable: false, defaultValue: 0.0);
+            Slug = table.Column<string>(name: "Slug", maxLength: 500, nullable: true);
 
             AddAuditableColumns(table);
             return this;
         }
+        
         public OperationBuilder<AddColumnOperation> CompanyId { get; set; }
         public OperationBuilder<AddColumnOperation> ModuleId { get; set; }
         public OperationBuilder<AddColumnOperation> TypeId { get; set; }
@@ -63,5 +69,6 @@ namespace GIBS.Module.BusinessDirectory.Migrations.EntityBuilders
         public OperationBuilder<AddColumnOperation> IsActive { get; set; }
         public OperationBuilder<AddColumnOperation> Latitude { get; set; } 
         public OperationBuilder<AddColumnOperation> Longitude { get; set; }
+        public OperationBuilder<AddColumnOperation> Slug { get; set; }
     }
 }

@@ -10,9 +10,8 @@ namespace GIBS.Module.BusinessDirectory.Startup
         {
             services.AddScoped<IBusinessDirectoryService, BusinessDirectoryService>();
             services.AddScoped<IBusinessCompanyService, BusinessCompanyService>();
-
-            // Register BusinessCompanyService with HttpClient using AddHttpClient
-          //  services.AddHttpClient<IBusinessCompanyService, BusinessCompanyService>();
+            services.AddScoped<IBAttributeService, BAttributeService>();
+            
         }
     }
 }

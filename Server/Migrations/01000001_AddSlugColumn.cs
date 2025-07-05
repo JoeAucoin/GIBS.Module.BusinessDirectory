@@ -2,10 +2,8 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 using Oqtane.Databases.Interfaces;
 using Oqtane.Migrations;
-
 using GIBS.Module.BusinessDirectory.Migrations.EntityBuilders;
 using GIBS.Module.BusinessDirectory.Repository;
-
 
 namespace GIBS.Module.BusinessDirectory.Server.Migrations
 {
@@ -19,25 +17,14 @@ namespace GIBS.Module.BusinessDirectory.Server.Migrations
 
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            var BusinessEntityBuilder = new BusinessEntityBuilder(migrationBuilder, ActiveDatabase);
-            BusinessEntityBuilder.AddStringColumn("Slug", 500, true);
-            BusinessEntityBuilder.AddIndex("IX_BusinessCompany_Slug", "Slug", true);
-
-            var BusinessDirectoryBuilder = new BusinessDirectoryEntityBuilder(migrationBuilder, ActiveDatabase);
-            BusinessDirectoryBuilder.AddStringColumn("Slug", 500, true);
-            BusinessDirectoryBuilder.AddIndex("IX_BusinessType_Slug", "Slug", true);
-
+            // This migration is now redundant since Slug columns are created in the initial migration
+            // Keeping this as a placeholder for version compatibility
+            // No operations needed - Slug columns and indexes are already created in 01000000_InitializeModule
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            //var BusinessEntityBuilder = new BusinessEntityBuilder(migrationBuilder, ActiveDatabase);
-            //BusinessEntityBuilder.DropIndex("IX_BusinessCompany_Slug", "Slug");
-            //BusinessEntityBuilder.DropColumn("Slug", "GIBSBusinessCompany"); // Removed the second argument to match the method signature
-
-            //var BusinessDirectoryBuilder = new BusinessDirectoryEntityBuilder(migrationBuilder, ActiveDatabase);
-            //BusinessDirectoryBuilder.DropIndex("IX_BusinessType_Slug", "Slug");
-            //BusinessDirectoryBuilder.DropColumn("Slug", "GIBSBusinessType"); // Removed the second argument to match the method signature
+            // No operations needed - rollback handled in the initial migration
         }
     }
 }

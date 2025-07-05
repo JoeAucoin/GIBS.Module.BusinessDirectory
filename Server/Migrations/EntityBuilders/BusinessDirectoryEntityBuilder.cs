@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore.Migrations.Operations.Builders;
 using Oqtane.Databases.Interfaces;
 using Oqtane.Migrations;
 using Oqtane.Migrations.EntityBuilders;
-using System;
 
 namespace GIBS.Module.BusinessDirectory.Migrations.EntityBuilders
 {
@@ -31,7 +30,10 @@ namespace GIBS.Module.BusinessDirectory.Migrations.EntityBuilders
             SortOrder = table.Column<int>(name: "SortOrder", nullable: false, defaultValue: 0);
             IsNewItem = table.Column<bool>(name: "IsNewItem", nullable: false, defaultValue: false);
             IsActive = table.Column<bool>(name: "IsActive", nullable: false, defaultValue: true);
-            ParentId = table.Column<int>(name: "ParentId", nullable: false, defaultValue: -1);   
+            ParentId = table.Column<int>(name: "ParentId", nullable: false, defaultValue: -1);
+            // Add Slug column to initial creation
+            Slug = table.Column<string>(name: "Slug", maxLength: 500, nullable: true);
+            
             AddAuditableColumns(table);
             return this;
         }
@@ -45,5 +47,6 @@ namespace GIBS.Module.BusinessDirectory.Migrations.EntityBuilders
         public OperationBuilder<AddColumnOperation> IsNewItem { get; set; }
         public OperationBuilder<AddColumnOperation> IsActive { get; set; }
         public OperationBuilder<AddColumnOperation> ParentId { get; set; }
+        public OperationBuilder<AddColumnOperation> Slug { get; set; }
     }
 }

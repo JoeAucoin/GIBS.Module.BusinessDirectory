@@ -22,5 +22,9 @@ namespace GIBS.Module.BusinessDirectory.Repository
         Task<List<BusinessCompany>> GetBusinessCompaniesByTypeAsync(int typeId, int moduleId);
 
         Task<List<BusinessCompany>> GetBusinessCompaniesByIsNewItemAsync(int moduleId);
+
+        Task UpdateCompanyAttributesAsync(int companyId, int moduleId, List<int> attributeIds);
+
+        Task<List<BusinessCompany>> GetCompanyAttributesAsync(int companyId, int moduleId);
     }
 }

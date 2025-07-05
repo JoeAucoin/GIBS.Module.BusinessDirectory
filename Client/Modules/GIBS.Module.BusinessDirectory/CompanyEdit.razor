@@ -1,5 +1,6 @@
 ﻿@using GIBS.Module.BusinessDirectory.Models
 @using GIBS.Module.BusinessDirectory.Services
+@using Microsoft.Extensions.Logging
 @using Oqtane.Modules.Controls
 @using Oqtane.UI
 @using Oqtane.Shared
@@ -13,6 +14,7 @@
 @inherits ModuleBase
 @inject IBusinessCompanyService BusinessCompanyService
 @inject IBusinessDirectoryService BusinessDirectoryService
+@inject IBAttributeService BAttributeService
 @inject NavigationManager NavigationManager
 @inject IStringLocalizer<CompanyEdit> Localizer
 @inject ISettingService SettingService
@@ -182,6 +184,27 @@
                     }
                 </div>
             </div>
+            <div class="row mb-1 align-items-center">
+
+                <div class="col-sm-3 align-top">
+                    @Localizer["Label.Attributes"]
+                </div>
+                <div class="col-sm-9">
+                    @foreach (var attr in _attributes)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="attr_@attr.AttributeId"
+                                   value="@attr.AttributeId"
+                                   @onchange="e => OnAttributeChecked(attr.AttributeId, e.Value is bool b && b)"
+                                   checked="@_selectedAttributeIds.Contains(attr.AttributeId)" />
+                            <label class="form-check-label" for="attr_@attr.AttributeId">@attr.AttributeName</label>
+                        </div>
+                    }
+                </div>
+
+            </div>
+
+
 
             <div class="row mb-1 align-items-center">
                 <Label Class="col-sm-3" For="sortOrder" HelpText="Enter the sort order." ResourceKey="Label.SortOrder">@Localizer["Label.SortOrder"]</Label>
@@ -204,6 +227,7 @@
                     <input id="isActive" type="checkbox" class="form-check-input" @bind="_company.IsActive" />
                 </div>
             </div>
+                                    
             <div class="row mb-1 align-items-center">
                 <Label Class="col-sm-3" For="isActive" HelpText="Click button to lookup latitude and Longitude" ResourceKey="Label.LatLongButton" />
                 <div class="col-sm-9">
@@ -272,8 +296,11 @@ else
     private bool _initialized = false;
     private string CurrentUserName;
 
+    private List<BAttribute> _attributes = new();
+    private List<int> _selectedAttributeIds = new List<int>();
+
     private List<BusinessType> ParentItems = new();
-    //private int _parentId = -1;
+    
     private string _geoError;
     private string _apiKey = "";
     private string _returnurl = string.Empty;
@@ -292,12 +319,13 @@ else
         {
             _returnurl = returnurl.ToString();
         }
-        
+
+        _attributes = (await BAttributeService.GetAttributesAsync(ModuleState.ModuleId)).ToList();
+
 
         _apiKey = SettingService.GetSetting(ModuleState.Settings, "GoogleApiKey", "");
 
         int moduleId = PageState.ModuleId /* get your ModuleId here */;
-        // ParentItems = await BusinessDirectoryService.GetBusinessDirectorysAsync(moduleId);
         ParentItems = BuildTree(await BusinessDirectoryService.GetBusinessDirectorysAsync(moduleId));
 
         // Get current user (optional, for audit fields)
@@ -312,6 +340,30 @@ else
                 _isEditMode = true;
 
                 _company = await BusinessCompanyService.GetBusinessCompanyAsync(companyId, ModuleState.ModuleId);
+
+                if (_company != null)
+                {
+                    try
+                    {
+                        var itemAttributes = await BusinessCompanyService.GetCompanyAttributesAsync(_company.CompanyId, ModuleState.ModuleId);
+                        // DEBUG: Log the count of attributes returned
+                      //  await logger.LogInformation("DEBUG: GetCompanyAttributesAsync returned {Count} items for company {CompanyId}", itemAttributes?.Count ?? 0, _company.CompanyId);
+                        _selectedAttributeIds = itemAttributes
+                            .SelectMany(a => a.BusinessToAttribute ?? new List<BusinessToAttribute>())
+                            .Select(bta => bta.AttributeId)
+                            .Distinct()
+                            .ToList();
+
+                     //   await logger.LogInformation("Loaded attributes for company {CompanyId}: {AttributeIds}", companyId, string.Join(", ", _selectedAttributeIds));
+                    }
+                    catch (Exception attrEx)
+                    {
+                        await logger.LogError($"Error loading company attributes: {attrEx.Message}");
+                        // Continue without attributes if there's an error
+                        _selectedAttributeIds = new List<int>();
+                    }
+                }
+                    
                 if (_company == null)
                 {
                     AddModuleMessage(Localizer["Error.LoadCompany.NotFound", companyId.ToString()], MessageType.Error);
@@ -340,6 +392,22 @@ else
             _initialized = true;
         }
     }
+
+
+     private void OnAttributeChecked(int attributeId, bool isChecked)
+    {
+        if (isChecked)
+        {
+            if (!_selectedAttributeIds.Contains(attributeId))
+                _selectedAttributeIds.Add(attributeId);
+        }
+        else
+        {
+            _selectedAttributeIds.Remove(attributeId);
+        }
+    }
+
+    
 
     // private string ReturnUrl()
     // {
@@ -433,7 +501,7 @@ else
         {
             if (_isEditMode)
             {
-                _company.ModifiedBy = CurrentUserName;
+             //   _company.ModifiedBy = CurrentUserName;
                 await BusinessCompanyService.UpdateBusinessCompanyAsync(_company);
                 AddModuleMessage(Localizer["Success.Update"], MessageType.Success);
             }
@@ -444,6 +512,9 @@ else
                 await BusinessCompanyService.AddBusinessCompanyAsync(_company);
                 AddModuleMessage(Localizer["Success.Add"], MessageType.Success);
             }
+
+            await BusinessCompanyService.UpdateCompanyAttributesAsync(_company.CompanyId, ModuleState.ModuleId, _selectedAttributeIds);
+
             NavigationManager.NavigateTo(ReturnUrl());
         }
         catch (Exception ex)

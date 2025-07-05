@@ -13,6 +13,7 @@
 <p class="text-center">
     <ActionLink Action="Types" Security="SecurityAccessLevel.Edit" Text="View Types" ResourceKey="Types" />
     <ActionLink Action="Company" Security="SecurityAccessLevel.Edit" Text="View Companies" ResourceKey="Companies" />
+    <ActionLink Action="Attribute" Security="SecurityAccessLevel.Edit" Text="View Attributes" ResourceKey="Attributes" />
 </p>
 
 <div class="container" id="gibs">
@@ -69,7 +70,18 @@
                                         <a href="@_companyInfo.Website" target="_blank">@_companyInfo.Website</a>
                                     </div>
                                 }
-
+                                @if (_companyInfo.BusinessToAttribute != null && _companyInfo.BusinessToAttribute.Any())
+                                {
+                                    <div class="company-details-attributes mb-1 mt-4">
+                                        
+                                        <ul class="list-inline">
+                                            @foreach (var attr in _companyInfo.BusinessToAttribute)
+                                            {
+                                                <li class="list-inline-item badge bg-secondary mb-2 fs-6">@attr.BAttribute?.AttributeDescription</li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
                             </div>
                             <div class="col-md-5 text-center text-md-end mb-md-0">
                                 <img src="@(string.IsNullOrWhiteSpace(_companyInfo.ImageURL) ? ModulePath() + "/images/no-image.png" : _companyInfo.ImageURL)"
@@ -77,13 +89,18 @@
                                      class="company-details-image img-fluid rounded" />
                             </div>
                         </div>
+                        <div class="row">
+                             <div class="col-12">
+                                <div class="company-details-description mb-2" style="white-space: pre-line;">
+                                    @_companyInfo.Description
+                                </div>
+                             </div>
+                        </div>
                         @if (_companyInfo.Latitude != 0 && _companyInfo.Longitude != 0)
                         {
                             <div class="row">
                                 <div class="col-12">
-                                    <div class="company-details-description mb-2" style="white-space: pre-line;">
-                                        @_companyInfo.Description
-                                    </div>
+                                   
                                     <div class="company-details-map">
                                         <iframe 
                                                 height="400"

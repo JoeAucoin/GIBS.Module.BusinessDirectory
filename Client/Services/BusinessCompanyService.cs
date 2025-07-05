@@ -33,6 +33,7 @@ namespace GIBS.Module.BusinessDirectory.Services
 
         public async Task<Models.BusinessCompany> GetBusinessCompanyAsync(int CompanyId, int ModuleId)
         {
+            // This will now include BusinessToAttribute and BAttribute in the deserialized object
             return await GetJsonAsync<Models.BusinessCompany>(CreateAuthorizationPolicyUrl($"{Apiurl}/{CompanyId}/{ModuleId}", EntityNames.Module, ModuleId));
         }
 
@@ -85,6 +86,47 @@ namespace GIBS.Module.BusinessDirectory.Services
                 return imageUrl?.Trim('"'); // Remove quotes if returned as JSON string
             }
             return null;
+        }
+
+        public async Task UpdateCompanyAttributesAsync(int companyId, int moduleId, List<int> attributeIds)
+        {
+            var request = new
+            {
+                CompanyId = companyId,
+                ModuleId = moduleId,
+                AttributeIds = attributeIds
+            };
+            await _httpClient.PostAsJsonAsync($"{Apiurl}/UpdateCompanyAttributes", request);
+        }
+
+        public async Task<List<Models.BusinessCompany>> GetCompanyAttributesAsync(int companyId, int moduleId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{Apiurl}/companyattributes/{companyId}/{moduleId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    if (string.IsNullOrWhiteSpace(content) || content.StartsWith("<"))
+                    {
+                        // Response is HTML instead of JSON, likely an error page
+                        throw new InvalidOperationException("Server returned HTML instead of JSON data");
+                    }
+
+                    return await response.Content.ReadFromJsonAsync<List<Models.BusinessCompany>>();
+                }
+                else
+                {
+                    throw new HttpRequestException($"API call failed with status: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the error and return empty list
+             //   Console.WriteLine($"Error in GetCompanyAttributesAsync: {ex.Message}");
+                return new List<Models.BusinessCompany>();
+            }
         }
     }
 }

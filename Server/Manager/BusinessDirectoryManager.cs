@@ -37,27 +37,62 @@ namespace GIBS.Module.BusinessDirectory.Manager
         public string ExportModule(Oqtane.Models.Module module)
         {
             string content = "";
-            List<Models.BusinessType> BusinessDirectorys = _BusinessDirectoryRepository.GetBusinessDirectorys(module.ModuleId).ToList();
-            if (BusinessDirectorys != null)
+
+            // Export all relevant entities
+            var exportDto = new Models.BusinessDirectoryExportDto
             {
-                content = JsonSerializer.Serialize(BusinessDirectorys);
+                BusinessTypes = _BusinessDirectoryRepository.GetBusinessDirectorys(module.ModuleId).ToList()
+            };
+
+            // You may need to inject and use the appropriate repositories/services for these:
+            using (var db = new Repository.BusinessDirectoryContext(_DBContextDependencies))
+            {
+                exportDto.BusinessCompanies = db.BusinessCompany.Where(x => x.ModuleId == module.ModuleId).ToList();
+                exportDto.BAttributes = db.BAttribute.Where(x => x.ModuleId == module.ModuleId).ToList();
+                exportDto.BusinessToAttributes = db.BusinessToAttribute
+                    .Where(x => exportDto.BusinessCompanies.Select(c => c.CompanyId).Contains(x.CompanyId))
+                    .ToList();
             }
+
+            content = JsonSerializer.Serialize(exportDto);
             return content;
         }
 
         public void ImportModule(Oqtane.Models.Module module, string content, string version)
         {
-            List<Models.BusinessType> BusinessDirectorys = null;
-            if (!string.IsNullOrEmpty(content))
+            if (string.IsNullOrEmpty(content)) return;
+
+            var exportDto = JsonSerializer.Deserialize<Models.BusinessDirectoryExportDto>(content);
+            if (exportDto == null) return;
+
+            // Import order: Types -> Attributes -> Companies -> BusinessToAttributes
+            foreach (var type in exportDto.BusinessTypes)
             {
-                BusinessDirectorys = JsonSerializer.Deserialize<List<Models.BusinessType>>(content);
+                type.ModuleId = module.ModuleId;
+                _BusinessDirectoryRepository.AddBusinessDirectory(type);
             }
-            if (BusinessDirectorys != null)
+
+            using (var db = new Repository.BusinessDirectoryContext(_DBContextDependencies))
             {
-                foreach(var BusinessDirectory in BusinessDirectorys)
+                foreach (var attr in exportDto.BAttributes)
                 {
-                    _BusinessDirectoryRepository.AddBusinessDirectory(new Models.BusinessType { ModuleId = module.ModuleId, TypeName = BusinessDirectory.TypeName });
+                    attr.ModuleId = module.ModuleId;
+                    db.BAttribute.Add(attr);
                 }
+                db.SaveChanges();
+
+                foreach (var company in exportDto.BusinessCompanies)
+                {
+                    company.ModuleId = module.ModuleId;
+                    db.BusinessCompany.Add(company);
+                }
+                db.SaveChanges();
+
+                foreach (var bta in exportDto.BusinessToAttributes)
+                {
+                    db.BusinessToAttribute.Add(bta);
+                }
+                db.SaveChanges();
             }
         }
 

@@ -9,6 +9,7 @@ using Oqtane.Security;
 using Oqtane.Shared;
 using GIBS.Module.BusinessDirectory.Repository;
 using GIBS.Module.BusinessDirectory.Models;
+using System;
 
 namespace GIBS.Module.BusinessDirectory.Services
 {
@@ -129,6 +130,25 @@ namespace GIBS.Module.BusinessDirectory.Services
         {
             // Not used on server side, but required by interface
             throw new System.NotImplementedException("Image upload is not implemented on the server side.");
+        }
+
+        public async Task UpdateCompanyAttributesAsync(int companyId, int moduleId, List<int> attributeIds)
+        {
+            if (_userPermissions.IsAuthorized(_accessor.HttpContext.User, _alias.SiteId, EntityNames.Module, moduleId, PermissionNames.Edit))
+            {
+                await _businessCompanyRepository.UpdateCompanyAttributesAsync(companyId, moduleId, attributeIds);
+                _logger.Log(LogLevel.Information, this, LogFunction.Update, "Company Attributes Updated {CompanyId} {ModuleId}", companyId, moduleId);
+            }
+            else
+            {
+                _logger.Log(LogLevel.Error, this, LogFunction.Security, "Unauthorized UpdateCompanyAttributes Attempt {CompanyId} {ModuleId}", companyId, moduleId);
+                throw new UnauthorizedAccessException("Unauthorized access to update company attributes");
+            }
+        }
+
+        public async Task<List<Models.BusinessCompany>> GetCompanyAttributesAsync(int companyId, int moduleId)
+        {
+            return await _businessCompanyRepository.GetCompanyAttributesAsync(companyId, moduleId);
         }
     }
 }

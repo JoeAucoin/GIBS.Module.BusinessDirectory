@@ -19,7 +19,7 @@ namespace GIBS.Module.BusinessDirectory.Repository
         public IEnumerable<Models.BusinessType> GetBusinessDirectorysAsync(int moduleId)
         {
             using var db = _factory.CreateDbContext();
-            return db.BusinessDirectory
+            return db.BusinessType
                 .Where(item => item.ModuleId == moduleId)
                 .OrderBy(item => item.SortOrder)
                 .AsNoTracking()
@@ -29,7 +29,7 @@ namespace GIBS.Module.BusinessDirectory.Repository
         public Models.BusinessType GetBusinessDirectoryAsync(int typeId, int moduleId)
         {
             using var db = _factory.CreateDbContext();
-            return db.BusinessDirectory
+            return db.BusinessType
                 .AsNoTracking()
                 .FirstOrDefault(item => item.TypeId == typeId && item.ModuleId == moduleId);
         }
@@ -37,7 +37,7 @@ namespace GIBS.Module.BusinessDirectory.Repository
         public Models.BusinessType AddBusinessDirectoryAsync(Models.BusinessType businessDirectory)
         {
             using var db = _factory.CreateDbContext();
-            db.BusinessDirectory.Add(businessDirectory);
+            db.BusinessType.Add(businessDirectory);
             db.SaveChanges();
             return businessDirectory;
         }
@@ -53,11 +53,11 @@ namespace GIBS.Module.BusinessDirectory.Repository
         public void DeleteBusinessDirectoryAsync(int typeId, int moduleId)
         {
             using var db = _factory.CreateDbContext();
-            var businessDirectory = db.BusinessDirectory
+            var businessDirectory = db.BusinessType
                 .FirstOrDefault(item => item.TypeId == typeId && item.ModuleId == moduleId);
             if (businessDirectory != null)
             {
-                db.BusinessDirectory.Remove(businessDirectory);
+                db.BusinessType.Remove(businessDirectory);
                 db.SaveChanges();
             }
         }
@@ -65,7 +65,7 @@ namespace GIBS.Module.BusinessDirectory.Repository
         public IEnumerable<BusinessType> GetBusinessDirectorys(int ModuleId)
         {
             using var db = _factory.CreateDbContext();
-            return db.BusinessDirectory
+            return db.BusinessType
                 .Where(item => item.ModuleId == ModuleId)
                 .OrderBy(item => item.SortOrder)
                 .AsNoTracking()
@@ -75,7 +75,7 @@ namespace GIBS.Module.BusinessDirectory.Repository
         public BusinessType GetBusinessDirectory(int TypeId)
         {
             using var db = _factory.CreateDbContext();
-            return db.BusinessDirectory
+            return db.BusinessType
                 .AsNoTracking()
                 .FirstOrDefault(item => item.TypeId == TypeId);
         }
@@ -85,18 +85,18 @@ namespace GIBS.Module.BusinessDirectory.Repository
             using var db = _factory.CreateDbContext();
             if (tracking)
             {
-                return db.BusinessDirectory.Find(TypeId);
+                return db.BusinessType.Find(TypeId);
             }
             else
             {
-                return db.BusinessDirectory.AsNoTracking().FirstOrDefault(item => item.TypeId == TypeId);
+                return db.BusinessType.AsNoTracking().FirstOrDefault(item => item.TypeId == TypeId);
             }
         }
 
         public BusinessType AddBusinessDirectory(BusinessType BusinessDirectory)
         {
             using var db = _factory.CreateDbContext();
-            db.BusinessDirectory.Add(BusinessDirectory);
+            db.BusinessType.Add(BusinessDirectory);
             db.SaveChanges();
             return BusinessDirectory;
         }
@@ -112,10 +112,10 @@ namespace GIBS.Module.BusinessDirectory.Repository
         public void DeleteBusinessDirectory(int TypeId)
         {
             using var db = _factory.CreateDbContext();
-            var businessDirectory = db.BusinessDirectory.Find(TypeId);
+            var businessDirectory = db.BusinessType.Find(TypeId);
             if (businessDirectory != null)
             {
-                db.BusinessDirectory.Remove(businessDirectory);
+                db.BusinessType.Remove(businessDirectory);
                 db.SaveChanges();
             }
         }

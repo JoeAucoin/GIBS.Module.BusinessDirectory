@@ -24,7 +24,11 @@ namespace GIBS.Module.BusinessDirectory.Startup
             services.AddTransient<IBusinessDirectoryService, ServerBusinessDirectoryService>();
             services.AddTransient<IBusinessDirectoryRepository, BusinessDirectoryRepository>();
 
-
+            // Add BAttribute service and repository registrations
+            services.AddTransient<IBAttributeService, ServerBAttributeService>();
+            services.AddTransient<IBAttributeRepository, BAttributeRepository>();
+            //services.AddTransient<IBAttributeService, ServerBAttributeService>();
+            //services.AddTransient<IBAttributeRepository, BAttributeRepository>();
 
             services.AddDbContextFactory<BusinessDirectoryContext>(opt => { }, ServiceLifetime.Transient);
         }

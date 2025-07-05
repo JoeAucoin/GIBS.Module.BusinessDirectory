@@ -59,7 +59,7 @@ namespace GIBS.Module.BusinessDirectory.Server.Controllers
             var businessCompany = await _businessCompanyRepository.GetBusinessCompanyAsync(id, moduleid);
             if (businessCompany != null && IsAuthorizedEntityId(EntityNames.Module, businessCompany.ModuleId))
             {
-                return businessCompany;
+                return businessCompany; // Now includes attributes
             }
             else
             {
@@ -232,6 +232,53 @@ namespace GIBS.Module.BusinessDirectory.Server.Controllers
                     System.IO.File.Delete(filepart);
                 }
             }
+        }
+
+        [HttpPost("UpdateCompanyAttributes")]
+        [Authorize(Policy = PolicyNames.EditModule)]
+        public async Task<IActionResult> UpdateCompanyAttributes([FromBody] UpdateCompanyAttributesRequest request)
+        {
+            if (request == null) return BadRequest("Request cannot be null");
+
+            if (!IsAuthorizedEntityId(EntityNames.Module, request.ModuleId))
+            {
+                _logger.Log(LogLevel.Error, this, LogFunction.Security, "Unauthorized UpdateCompanyAttributes Attempt {CompanyId} {ModuleId}", request.CompanyId, request.ModuleId);
+                return Forbid();
+            }
+
+            await _businessCompanyRepository.UpdateCompanyAttributesAsync(request.CompanyId, request.ModuleId, request.AttributeIds);
+            return Ok();
+        }
+
+
+        [HttpGet("companyattributes/{companyId}/{moduleId}")]
+        [Authorize(Policy = PolicyNames.ViewModule)]
+        public async Task<IActionResult> GetCompanyAttributes(int companyId, int moduleId)
+        {
+            if (!IsAuthorizedEntityId(EntityNames.Module, moduleId))
+            {
+                _logger.Log(LogLevel.Error, this, LogFunction.Security, "Unauthorized GetCompanyAttributes Attempt {CompanyId} {ModuleId}", companyId, moduleId);
+                return Forbid();
+            }
+
+            try
+            {
+                var companies = await _businessCompanyRepository.GetCompanyAttributesAsync(companyId, moduleId);
+                return Ok(companies);
+            }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, this, LogFunction.Read, ex, "Error getting company attributes for {CompanyId} {ModuleId}", companyId, moduleId);
+                return StatusCode(500, "Error retrieving company attributes");
+            }
+        }
+
+
+        public class UpdateCompanyAttributesRequest
+        {
+            public int CompanyId { get; set; }
+            public int ModuleId { get; set; }
+            public List<int> AttributeIds { get; set; }
         }
     }
 }
