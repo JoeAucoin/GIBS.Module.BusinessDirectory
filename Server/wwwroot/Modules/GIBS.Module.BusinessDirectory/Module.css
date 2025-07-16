@@ -11,6 +11,15 @@
 .typeLinks {
     font-size: 1.1rem;
     margin-bottom: 1rem;
+    text-decoration: none;
+}
+
+.typeLinksDiv {
+    min-width: 240px;
+    background-color: #F0F0F0; 
+    border: 1px solid #ccc;
+    padding: 4px;
+    margin-bottom: .5rem;
 }
 
 .company-listing-row {
