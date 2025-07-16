@@ -18,6 +18,7 @@
 @inject NavigationManager NavigationManager
 @inject IStringLocalizer<CompanyEdit> Localizer
 @inject ISettingService SettingService
+@inject IFileService FileService
 
 
 @if (_initialized)
@@ -160,35 +161,30 @@
 
 
             <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3" For="upload" HelpText="Upload the file you want" ResourceKey="Label.UploadImage">Image: </Label>
+                <div class="col-sm-9">
+                    <FileManager UploadMultiple="false" Filter="jpg,png,gif,jpeg"
+                                 FolderId="@_folderId"
+                                 ShowSuccess="true" ShowFolders="false" ShowFiles="false" ShowImage="true"
+                                 OnUpload="@HandleFileUpload" />
+                </div>
+            </div>
+
+            <div class="row mb-1 align-items-center">
                 <Label Class="col-sm-3" For="imageURL" HelpText="Upload or enter an image URL." ResourceKey="Label.ImageURL">@Localizer["Label.ImageURL"]</Label>
                 <div class="col-sm-9">
                     <input id="imageURL" class="form-control mb-1" @bind="_company.ImageURL" placeholder="Paste or enter image URL" />
-                    
-                    @if (!string.IsNullOrEmpty(_imageUploadError))
-                    {
-                        <div class="text-danger">@_imageUploadError</div>
-                    }
+
                     @if (!string.IsNullOrEmpty(_company.ImageURL))
                     {
-                        <img src="@_company.ImageURL" alt="Image preview" style="max-width: 200px; max-height: 100px; margin-top: 5px;" />
-                    }
-                </div>
-            </div>
-
-            <div class="row mb-1 align-items-center">
-                <Label Class="col-sm-3" For="imageUpload" HelpText="Upload an image file." ResourceKey="Label.ImageUpload">Image Upload</Label>
-                <div class="col-sm-9">
-                    <InputFile id="imageUpload" OnChange="OnImageFileSelected" />
-                    @if (!string.IsNullOrEmpty(_imageUploadError))
-                    {
-                        <div class="text-danger">@_imageUploadError</div>
+                        <img src="@_company.ImageURL" alt="Image preview" style="max-width: 280px; max-height: 200px; margin-top: 5px; margin-bottom: 10px;" />
                     }
                 </div>
             </div>
             <div class="row mb-1 align-items-center">
 
-                <div class="col-sm-3 align-top">
-                    @Localizer["Label.Attributes"]
+                <div class="col-sm-3">
+                  @Localizer["Label.Attributes"]
                 </div>
                 <div class="col-sm-9">
                     @foreach (var attr in _attributes)
@@ -306,6 +302,7 @@ else
     private string _apiKey = "";
     private string _returnurl = string.Empty;
     private string _imageUploadError;
+    private int _folderId = 1;
 
     public override List<Resource> Resources => new List<Resource>()
     {
@@ -325,6 +322,18 @@ else
 
 
         _apiKey = SettingService.GetSetting(ModuleState.Settings, "GoogleApiKey", "");
+
+        // Correctly parse the setting as an integer
+        if (int.TryParse(SettingService.GetSetting(ModuleState.Settings, "ImageFolder", "1"), out int folderId))
+        {
+            _folderId = folderId;
+        }
+        else
+        {
+            // Handle the case where the setting is not a valid integer
+            _folderId = 1; // Default value or handle error
+        }
+
 
         int moduleId = PageState.ModuleId /* get your ModuleId here */;
         ParentItems = BuildTree(await BusinessDirectoryService.GetBusinessDirectorysAsync(moduleId));
@@ -487,6 +496,25 @@ else
         }
     }
 
+    private async void HandleFileUpload(int fileId)
+    {
+        if (_company != null)
+        {
+            var uploadedFile = await FileService.GetFileAsync(fileId);
+            if (uploadedFile != null)
+            {
+
+                _company.ImageURL = uploadedFile.Url;
+               
+            }
+            else
+            {
+                _company.ImageURL = null;
+            }
+            StateHasChanged();
+        }
+    }
+
     private async Task SaveCompany()
     {
         _validated = true;
@@ -525,57 +553,57 @@ else
     }
 
 
-    private async Task OnImageFileSelected(InputFileChangeEventArgs e)
-    {
-        _imageUploadError = null;
-        var file = e.File;
-        if (file == null)
-        {
-            return;
-        }
+    // private async Task OnImageFileSelected(InputFileChangeEventArgs e)
+    // {
+    //     _imageUploadError = null;
+    //     var file = e.File;
+    //     if (file == null)
+    //     {
+    //         return;
+    //     }
 
-        if (file.Size > 10 * 1024 * 1024) // 10 MB limit
-        {
-            _imageUploadError = "File size exceeds the 10MB limit.";
-            return;
-        }
+    //     if (file.Size > 10 * 1024 * 1024) // 10 MB limit
+    //     {
+    //         _imageUploadError = "File size exceeds the 10MB limit.";
+    //         return;
+    //     }
 
-        try
-        {
-            // Get a stream for the file
-            using var stream = file.OpenReadStream(10 * 1024 * 1024);
+    //     try
+    //     {
+    //         // Get a stream for the file
+    //         using var stream = file.OpenReadStream(10 * 1024 * 1024);
 
-            // Create a new HttpClient
-            using var client = new HttpClient { BaseAddress = new Uri(NavigationManager.BaseUri) };
+    //         // Create a new HttpClient
+    //         using var client = new HttpClient { BaseAddress = new Uri(NavigationManager.BaseUri) };
 
-            // Create the multipart form data content
-            using var formData = new MultipartFormDataContent();
-            using var fileContent = new StreamContent(stream);
-            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+    //         // Create the multipart form data content
+    //         using var formData = new MultipartFormDataContent();
+    //         using var fileContent = new StreamContent(stream);
+    //         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
 
-            // Add folder and file to the form data
-            formData.Add(fileContent, "file", file.Name);
+    //         // Add folder and file to the form data
+    //         formData.Add(fileContent, "file", file.Name);
 
-            // Post the form data to the API
-            var response = await client.PostAsync($"/api/BusinessCompany/upload-image", formData);
+    //         // Post the form data to the API
+    //         var response = await client.PostAsync($"/api/BusinessCompany/upload-image", formData);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var imageUrl = await response.Content.ReadAsStringAsync();
-                _company.ImageURL = imageUrl;
-                StateHasChanged(); // Refresh the UI to show the new image
-            }
-            else
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _imageUploadError = $"Image upload failed: {response.ReasonPhrase}. Details: {errorContent}";
-            }
-        }
-        catch (Exception ex)
-        {
-            _imageUploadError = $"Image upload error: {ex.Message}";
-        }
-    }
+    //         if (response.IsSuccessStatusCode)
+    //         {
+    //             var imageUrl = await response.Content.ReadAsStringAsync();
+    //             _company.ImageURL = imageUrl;
+    //             StateHasChanged(); // Refresh the UI to show the new image
+    //         }
+    //         else
+    //         {
+    //             var errorContent = await response.Content.ReadAsStringAsync();
+    //             _imageUploadError = $"Image upload failed: {response.ReasonPhrase}. Details: {errorContent}";
+    //         }
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _imageUploadError = $"Image upload error: {ex.Message}";
+    //     }
+    // }
 
     // private async Task OnImageFileSelected(InputFileChangeEventArgs e)
     // {

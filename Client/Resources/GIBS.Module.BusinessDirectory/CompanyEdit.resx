@@ -148,7 +148,7 @@
     <value>E-Mail Address: </value>
   </data>
   <data name="Label.ImageURL.Text" xml:space="preserve">
-    <value>Image: </value>
+    <value>Current Image: </value>
   </data>
   <data name="Label.IsActive.Text" xml:space="preserve">
     <value>Is Active: </value>
@@ -188,5 +188,8 @@
   </data>
   <data name="Label.Attributes.Text" xml:space="preserve">
     <value>Attributes:</value>
+  </data>
+  <data name="Label.UploadImage.Text" xml:space="preserve">
+    <value>Upload Image:</value>
   </data>
 </root>

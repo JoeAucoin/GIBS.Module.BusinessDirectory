@@ -24,7 +24,7 @@
             <select id="folderList" class="form-select" @bind="@_imageFolder">
                 @foreach (Folder folder in _folders)
                 {
-                    <option value="@(folder.Path)">@(new string('-', folder.Level * 2))@(folder.Name)</option>
+                    <option value="@(folder.FolderId)">@(new string('-', folder.Level * 2))@(folder.Name)</option>
                 }
             </select>
         </div>
