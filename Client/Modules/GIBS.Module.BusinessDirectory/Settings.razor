@@ -2,6 +2,7 @@
 @inherits ModuleBase
 @inject ISettingService SettingService
 @inject IStringLocalizer<Settings> Localizer
+@inject IFolderService FolderService
 
 <div class="container">
     <div class="row mb-1 align-items-center">
@@ -17,16 +18,30 @@
             <input id="featuredCount" type="text" class="form-control" @bind="@_featuredCount" />
         </div>
     </div>
+    <div class="row mb-1 align-items-center">
+        <Label Class="col-sm-3" For="folderList" HelpText="Select the image folder" ResourceKey="ImageFolder" ResourceType="@resourceType">Image Folder: </Label>
+        <div class="col-sm-9">
+            <select id="folderList" class="form-select" @bind="@_imageFolder">
+                @foreach (Folder folder in _folders)
+                {
+                    <option value="@(folder.Path)">@(new string('-', folder.Level * 2))@(folder.Name)</option>
+                }
+            </select>
+        </div>
+    </div>
+
 </div>
 
 @code {
 
     private string resourceType = "GIBS.Module.BusinessDirectory.Settings, GIBS.Module.BusinessDirectory.Client.Oqtane"; // for localization
     public override string Title => "Business Directory Settings";
+    private List<Folder> _folders = new List<Folder>();
 
     string _googleApiKey;
 
     string _featuredCount;
+    string _imageFolder;
 
     protected override async Task OnInitializedAsync()
     {
@@ -35,6 +50,8 @@
             Dictionary<string, string> settings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
             _googleApiKey = SettingService.GetSetting(settings, "GoogleApiKey", "");
             _featuredCount = SettingService.GetSetting(settings, "FeaturedCount", "3");
+            _imageFolder = SettingService.GetSetting(settings, "ImageFolder", "Root");
+            _folders = await FolderService.GetFoldersAsync(PageState.Site.SiteId);
         }
         catch (Exception ex)
         {
@@ -49,6 +66,7 @@
             Dictionary<string, string> settings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
             SettingService.SetSetting(settings, "GoogleApiKey", _googleApiKey);
             SettingService.SetSetting(settings, "FeaturedCount", _featuredCount);
+            SettingService.SetSetting(settings, "ImageFolder", _imageFolder);
             await SettingService.UpdateModuleSettingsAsync(settings, ModuleState.ModuleId);
         }
         catch (Exception ex)
@@ -56,4 +74,20 @@
             AddModuleMessage(ex.Message, MessageType.Error);
         }
     }
+
+    private async void FolderChanged(ChangeEventArgs e)
+    {
+        try
+        {
+          //  _folderId = int.Parse((string)e.Value);
+          //  await GetFiles();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            await logger.LogError(ex, "Error Loading Files {Error}", ex.Message);
+            AddModuleMessage(Localizer["Error.File.Load"], MessageType.Error);
+        }
+    }
+
 }

@@ -130,6 +130,7 @@ namespace GIBS.Module.BusinessDirectory.Server.Controllers
         }
 
         [HttpPost("upload-image")]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -139,6 +140,7 @@ namespace GIBS.Module.BusinessDirectory.Server.Controllers
                 return StatusCode(500, "WebHostEnvironment is not available.");
 
             var uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "business-images");
+            _logger.Log(LogLevel.Information, this, LogFunction.Create, "Uploads folder: {UploadsFolder}", uploadsFolder);
             if (!Directory.Exists(uploadsFolder))
                 Directory.CreateDirectory(uploadsFolder);
 
