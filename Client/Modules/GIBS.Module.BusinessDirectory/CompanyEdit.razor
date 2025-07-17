@@ -303,6 +303,8 @@ else
     private string _returnurl = string.Empty;
     private string _imageUploadError;
     private int _folderId = 1;
+    private int _imageMaxWidth; // Set your max width here
+    private int _imageMaxHeight; // Set your max height here
 
     public override List<Resource> Resources => new List<Resource>()
     {
@@ -332,6 +334,15 @@ else
         {
             // Handle the case where the setting is not a valid integer
             _folderId = 1; // Default value or handle error
+        }
+
+        if (!int.TryParse(SettingService.GetSetting(ModuleState.Settings, "ImageMaxWidth", "800"), out _imageMaxWidth))
+        {
+            _imageMaxWidth = 800;
+        }
+        if (!int.TryParse(SettingService.GetSetting(ModuleState.Settings, "ImageMaxHeight", "600"), out _imageMaxHeight))
+        {
+            _imageMaxHeight = 600;
         }
 
 
@@ -496,6 +507,25 @@ else
         }
     }
 
+    // private async void HandleFileUpload(int fileId)
+    // {
+    //     if (_company != null)
+    //     {
+    //         var uploadedFile = await FileService.GetFileAsync(fileId);
+    //         if (uploadedFile != null)
+    //         {
+
+    //             _company.ImageURL = uploadedFile.Url;
+               
+    //         }
+    //         else
+    //         {
+    //             _company.ImageURL = null;
+    //         }
+    //         StateHasChanged();
+    //     }
+    // }
+
     private async void HandleFileUpload(int fileId)
     {
         if (_company != null)
@@ -503,9 +533,33 @@ else
             var uploadedFile = await FileService.GetFileAsync(fileId);
             if (uploadedFile != null)
             {
-
-                _company.ImageURL = uploadedFile.Url;
-               
+                // Check if the image exceeds the maximum dimensions from settings
+                if (uploadedFile.ImageWidth > _imageMaxWidth || uploadedFile.ImageHeight > _imageMaxHeight)
+                {
+                    try
+                    {
+                        var resizedFile = await BusinessCompanyService.ResizeImageAsync(uploadedFile.FileId, _imageMaxWidth, _imageMaxHeight, ModuleState.ModuleId);
+                        if (resizedFile != null)
+                        {
+                            _company.ImageURL = resizedFile.Url;
+                        }
+                        else
+                        {
+                            // Fallback to original image if resize fails
+                            _company.ImageURL = uploadedFile.Url;
+                            AddModuleMessage("Image resizing failed. Using original image.", MessageType.Warning);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AddModuleMessage($"Error resizing image: {ex.Message}", MessageType.Error);
+                        _company.ImageURL = uploadedFile.Url; // Fallback to original image
+                    }
+                }
+                else
+                {
+                    _company.ImageURL = uploadedFile.Url;
+                }
             }
             else
             {

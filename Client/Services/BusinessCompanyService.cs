@@ -128,5 +128,25 @@ namespace GIBS.Module.BusinessDirectory.Services
                 return new List<Models.BusinessCompany>();
             }
         }
+
+        public async Task<Oqtane.Models.File> ResizeImageAsync(int fileId, int width, int height, int moduleId)
+        {
+            var request = new { FileId = fileId, Width = width, Height = height, ModuleId = moduleId };
+            var url = CreateAuthorizationPolicyUrl($"{Apiurl}/resize-image", EntityNames.Module, moduleId);
+
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync(url, request);
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<Oqtane.Models.File>();
+            }
+            catch (Exception ex)
+            {
+                // Log or handle exceptions as needed
+                Console.WriteLine($"Error resizing image: {ex.Message}");
+                return null;
+            }
+        }
+
     }
 }

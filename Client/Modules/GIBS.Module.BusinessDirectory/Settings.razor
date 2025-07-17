@@ -30,6 +30,19 @@
         </div>
     </div>
 
+    <div class="row mb-1 align-items-center">
+        <Label Class="col-sm-3" For="imageMaxWidth" HelpText="The maximum width for uploaded images (in pixels). The image will be resized if it exceeds this value." ResourceKey="ImageMaxWidth">Max Image Width: </Label>
+        <div class="col-sm-9">
+            <input id="imageMaxWidth" type="number" class="form-control" @bind="@_imageMaxWidth" />
+        </div>
+    </div>
+    <div class="row mb-1 align-items-center">
+        <Label Class="col-sm-3" For="imageMaxHeight" HelpText="The maximum height for uploaded images (in pixels). The image will be resized if it exceeds this value." ResourceKey="ImageMaxHeight">Max Image Height: </Label>
+        <div class="col-sm-9">
+            <input id="imageMaxHeight" type="number" class="form-control" @bind="@_imageMaxHeight" />
+        </div>
+    </div>
+
 </div>
 
 @code {
@@ -42,6 +55,8 @@
 
     string _featuredCount;
     string _imageFolder;
+    string _imageMaxWidth;
+    string _imageMaxHeight;
 
     protected override async Task OnInitializedAsync()
     {
@@ -51,6 +66,8 @@
             _googleApiKey = SettingService.GetSetting(settings, "GoogleApiKey", "");
             _featuredCount = SettingService.GetSetting(settings, "FeaturedCount", "3");
             _imageFolder = SettingService.GetSetting(settings, "ImageFolder", "Root");
+            _imageMaxWidth = SettingService.GetSetting(settings, "ImageMaxWidth", "800");
+            _imageMaxHeight = SettingService.GetSetting(settings, "ImageMaxHeight", "600");
             _folders = await FolderService.GetFoldersAsync(PageState.Site.SiteId);
         }
         catch (Exception ex)
@@ -67,6 +84,8 @@
             SettingService.SetSetting(settings, "GoogleApiKey", _googleApiKey);
             SettingService.SetSetting(settings, "FeaturedCount", _featuredCount);
             SettingService.SetSetting(settings, "ImageFolder", _imageFolder);
+            SettingService.SetSetting(settings, "ImageMaxWidth", _imageMaxWidth);
+            SettingService.SetSetting(settings, "ImageMaxHeight", _imageMaxHeight);
             await SettingService.UpdateModuleSettingsAsync(settings, ModuleState.ModuleId);
         }
         catch (Exception ex)

@@ -150,5 +150,11 @@ namespace GIBS.Module.BusinessDirectory.Services
         {
             return await _businessCompanyRepository.GetCompanyAttributesAsync(companyId, moduleId);
         }
+
+        public Task<Oqtane.Models.File> ResizeImageAsync(int fileId, int width, int height, int moduleId)
+        {
+            // This is handled by the controller, so no implementation is needed here.
+            throw new NotImplementedException();
+        }
     }
 }

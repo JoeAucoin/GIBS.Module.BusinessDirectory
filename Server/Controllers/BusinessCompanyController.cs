@@ -5,13 +5,17 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Oqtane.Controllers;
+using Oqtane.Enums;
 using Oqtane.Infrastructure;
+using Oqtane.Repository;
+using Oqtane.Services;
+using Oqtane.Shared;
+using SixLabors.ImageSharp;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using System;
-using Oqtane.Shared;
-using Oqtane.Enums;
+
 
 namespace GIBS.Module.BusinessDirectory.Server.Controllers
 {
@@ -20,17 +24,22 @@ namespace GIBS.Module.BusinessDirectory.Server.Controllers
     {
         private readonly IBusinessCompanyRepository _businessCompanyRepository;
         private readonly IWebHostEnvironment _env;
-   //     private readonly IFolderRepository _folders;
+        private readonly IFileRepository _files;
+        private readonly IImageService _imageService;
 
         public BusinessCompanyController(
             IBusinessCompanyRepository businessCompanyRepository,
             ILogManager logger,
             IHttpContextAccessor accessor,
-            IWebHostEnvironment env
+            IWebHostEnvironment env,
+            IFileRepository files,
+            IImageService imageService
         ) : base(logger, accessor)
         {
             _businessCompanyRepository = businessCompanyRepository;
             _env = env;
+            _files = files;
+            _imageService = imageService;
         }
 
         // GET: api/BusinessCompany?moduleid=x
@@ -38,7 +47,7 @@ namespace GIBS.Module.BusinessDirectory.Server.Controllers
         [Authorize(Policy = PolicyNames.ViewModule)]
         public async Task<IEnumerable<BusinessCompany>> Get(string moduleid)
         {
-           
+
             int moduleId;
             if (int.TryParse(moduleid, out moduleId) && IsAuthorizedEntityId(EntityNames.Module, moduleId))
             {
@@ -155,6 +164,74 @@ namespace GIBS.Module.BusinessDirectory.Server.Controllers
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
             var imageUrl = $"{baseUrl}/uploads/business-images/{fileName}";
             return Ok(imageUrl);
+        }
+
+        [HttpPost("resize-image")]
+        [Authorize(Policy = PolicyNames.EditModule)]
+        public async Task<ActionResult<Oqtane.Models.File>> ResizeImage([FromBody] ResizeRequest request)
+        {
+            var file = _files.GetFile(request.FileId);
+            if (file == null || !IsAuthorizedEntityId(EntityNames.Module, request.ModuleId))
+            {
+                _logger.Log(LogLevel.Error, this, LogFunction.Security, "Unauthorized Image Resize Attempt for FileId {FileId}", request.FileId);
+                return Forbid();
+            }
+
+            string originalFilePath = null;
+            string tempFilePath = null;
+
+            try
+            {
+                originalFilePath = _files.GetFilePath(file);
+                if (System.IO.File.Exists(originalFilePath))
+                {
+                    // 1. Create a temporary path for the resized image
+                    tempFilePath = Path.ChangeExtension(originalFilePath, ".tmp" + Path.GetExtension(originalFilePath));
+
+                    // 2. Use the IImageService to create the resized image at the temporary path
+                    var resizedImagePath = _imageService.CreateImage(originalFilePath, request.Width, request.Height, "medium", "center", "white", "", file.Extension, tempFilePath);
+
+                    if (string.IsNullOrEmpty(resizedImagePath) || !System.IO.File.Exists(resizedImagePath))
+                    {
+                        throw new Exception("Image resizing failed during temporary file creation.");
+                    }
+
+                    // 3. Update file metadata
+                    var fileInfo = new FileInfo(resizedImagePath);
+                    using (var image = await Image.LoadAsync(resizedImagePath))
+                    {
+                        file.ImageWidth = image.Width;
+                        file.ImageHeight = image.Height;
+                    }
+                    file.Size = (int)fileInfo.Length;
+
+                    // 4. The file is now resized and metadata is updated, but we need to replace the original file
+                    // At this point, all handles to the original file should be closed.
+                    System.IO.File.Delete(originalFilePath);
+                    System.IO.File.Move(resizedImagePath, originalFilePath);
+
+                    _files.UpdateFile(file);
+
+                    _logger.Log(LogLevel.Information, this, LogFunction.Update, "Image Resized Successfully {FileId}", request.FileId);
+                    return Ok(file);
+                }
+                else
+                {
+                    _logger.Log(LogLevel.Error, this, LogFunction.Read, "File Not Found For Resizing {FileId}", request.FileId);
+                    return NotFound();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Clean up temporary file if it exists
+                if (!string.IsNullOrEmpty(tempFilePath) && System.IO.File.Exists(tempFilePath))
+                {
+                    System.IO.File.Delete(tempFilePath);
+                }
+
+                _logger.Log(LogLevel.Error, this, LogFunction.Update, ex, "Error Resizing Image {FileId}", request.FileId);
+                return StatusCode(500, "An error occurred while resizing the image.");
+            }
         }
 
         [HttpPost("upload")]
@@ -281,6 +358,14 @@ namespace GIBS.Module.BusinessDirectory.Server.Controllers
             public int CompanyId { get; set; }
             public int ModuleId { get; set; }
             public List<int> AttributeIds { get; set; }
+        }
+
+        public class ResizeRequest
+        {
+            public int FileId { get; set; }
+            public int Width { get; set; }
+            public int Height { get; set; }
+            public int ModuleId { get; set; }
         }
     }
 }

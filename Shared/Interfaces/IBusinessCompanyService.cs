@@ -26,5 +26,6 @@ namespace GIBS.Module.BusinessDirectory.Services
         Task UpdateCompanyAttributesAsync(int companyId, int moduleId, List<int> attributeIds);
 
         Task<List<Models.BusinessCompany>> GetCompanyAttributesAsync(int companyId, int moduleId);
+        Task<Oqtane.Models.File> ResizeImageAsync(int fileId, int width, int height, int moduleId);
     }
 }
