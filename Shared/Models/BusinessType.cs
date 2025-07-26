@@ -29,6 +29,9 @@ namespace GIBS.Module.BusinessDirectory.Models
 
         [NotMapped]
         public List<BusinessType> Children { get; set; } = new List<BusinessType>();
+
+        [NotMapped]
+        public int CompanyCount { get; set; }
     }
 
 }

@@ -186,10 +186,13 @@
   <data name="Validation.CompanyType.Required" xml:space="preserve">
     <value>Company Type Required</value>
   </data>
-  <data name="Label.Attributes.Text" xml:space="preserve">
+  <data name="Label.Attributes" xml:space="preserve">
     <value>Attributes:</value>
   </data>
   <data name="Label.UploadImage.Text" xml:space="preserve">
     <value>Upload Image:</value>
+  </data>
+  <data name="Label.Slug.Text" xml:space="preserve">
+    <value>URL Slug</value>
   </data>
 </root>

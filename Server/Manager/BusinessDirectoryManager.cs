@@ -41,7 +41,7 @@ namespace GIBS.Module.BusinessDirectory.Manager
             // Export all relevant entities
             var exportDto = new Models.BusinessDirectoryExportDto
             {
-                BusinessTypes = _BusinessDirectoryRepository.GetBusinessDirectorys(module.ModuleId).ToList()
+                BusinessTypes = _BusinessDirectoryRepository.GetBusinessDirectorysAsync(module.ModuleId).GetAwaiter().GetResult()
             };
 
             // You may need to inject and use the appropriate repositories/services for these:
@@ -96,27 +96,27 @@ namespace GIBS.Module.BusinessDirectory.Manager
             }
         }
 
-        public Task<List<SearchContent>> GetSearchContentsAsync(PageModule pageModule, DateTime lastIndexedOn)
+        public async Task<List<SearchContent>> GetSearchContentsAsync(PageModule pageModule, DateTime lastIndexedOn)
         {
-           var searchContentList = new List<SearchContent>();
+            var searchContentList = new List<SearchContent>();
 
-           foreach (var BusinessDirectory in _BusinessDirectoryRepository.GetBusinessDirectorys(pageModule.ModuleId))
-           {
-               if (BusinessDirectory.ModifiedOn >= lastIndexedOn)
-               {
-                   searchContentList.Add(new SearchContent
-                   {
-                       EntityName = "GIBSBusinessType",
-                       EntityId = BusinessDirectory.TypeId.ToString(),
-                       Title = BusinessDirectory.TypeName,
-                       Body = BusinessDirectory.TypeDescription,
-                       ContentModifiedBy = BusinessDirectory.ModifiedBy,
-                       ContentModifiedOn = BusinessDirectory.ModifiedOn
-                   });
-               }
-           }
+            foreach (var BusinessDirectory in await _BusinessDirectoryRepository.GetBusinessDirectorysAsync(pageModule.ModuleId))
+            {
+                if (BusinessDirectory.ModifiedOn >= lastIndexedOn)
+                {
+                    searchContentList.Add(new SearchContent
+                    {
+                        EntityName = "GIBSBusinessType",
+                        EntityId = BusinessDirectory.TypeId.ToString(),
+                        Title = BusinessDirectory.TypeName,
+                        Body = BusinessDirectory.TypeDescription,
+                        ContentModifiedBy = BusinessDirectory.ModifiedBy,
+                        ContentModifiedOn = BusinessDirectory.ModifiedOn
+                    });
+                }
+            }
 
-           return Task.FromResult(searchContentList);
+            return searchContentList;
         }
     }
 }

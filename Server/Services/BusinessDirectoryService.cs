@@ -28,11 +28,11 @@ namespace GIBS.Module.BusinessDirectory.Services
             _alias = tenantManager.GetAlias();
         }
 
-        public Task<List<Models.BusinessType>> GetBusinessDirectorysAsync(int ModuleId)
+        public async Task<List<Models.BusinessType>> GetBusinessDirectorysAsync(int ModuleId)
         {
             if (_userPermissions.IsAuthorized(_accessor.HttpContext.User, _alias.SiteId, EntityNames.Module, ModuleId, PermissionNames.View))
             {
-                return Task.FromResult(_BusinessDirectoryRepository.GetBusinessDirectorys(ModuleId).ToList());
+                return await _BusinessDirectoryRepository.GetBusinessDirectorysAsync(ModuleId);
             }
             else
             {

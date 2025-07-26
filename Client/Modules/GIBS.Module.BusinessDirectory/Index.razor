@@ -11,8 +11,10 @@
 @inject ISettingService SettingService
 
 <p class="text-center">
-    <ActionLink Action="Types" Security="SecurityAccessLevel.Edit" Text="View Types" ResourceKey="Types" />
+
+    <ActionLink Action="CompanyEdit" Security="SecurityAccessLevel.Edit" IconName="plus" IconOnly Class="btn btn-outline-primary" ResourceKey="AddCompany" Text="@Localizer["AddCompany"]" />
     <ActionLink Action="Company" Security="SecurityAccessLevel.Edit" Text="View Companies" ResourceKey="Companies" />
+    <ActionLink Action="Types" Security="SecurityAccessLevel.Edit" Text="View Types" ResourceKey="Types" />
     <ActionLink Action="Attribute" Security="SecurityAccessLevel.Edit" Text="View Attributes" ResourceKey="Attributes" />
 </p>
 
@@ -137,31 +139,49 @@
                         }
                         else
                         {
-                            <h3>@Localizer["NewCompanies"]</h3>
+                            <h3>@_newFeaturedLabel</h3>
                             @foreach (var company in _newCompanies)
                             {
-                                <div class="col-lg-4 col-md-6 col-sm-6 mb-3">
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <h5 class="card-title">
-                                                <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs">@company.CompanyName</a>
-                                                <ActionLink Action="CompanyEdit"
-                                                            Parameters="@($"id={company.CompanyId}")" ReturnUrl="@ReturnUrl()"
-                                                            Security="SecurityAccessLevel.Edit" Text="Edit" IconName="pencil" IconOnly Class="btn btn-outline-secondary btn-sm"
-                                                            ResourceKey="CompanyEdit" />
-                                            </h5>
-                                            @if (!string.IsNullOrWhiteSpace(company.Address))
-                                            {
-                                                <div class="card-text">@company.Address<br /> @company.City, @company.State @company.ZipCode</div>
-                                            }
-                                            @if (!string.IsNullOrWhiteSpace(company.TypeDescription))
-                                            {
-                                                <p class="typeDescription"><a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs" class="typeDescription">@company.TypeDescription</a></p>
-                                            }
-                                            <div class="text-center">
-                                                <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs" class="btn btn-outline-secondary btn-sm">View Details</a>
+                                <div class="col-lg-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="row g-0">
+                                            <div class="col-md-6 d-flex align-items-start justify-content-center p-2">
+                                                <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs">
+                                                    <img src="@(string.IsNullOrWhiteSpace(company.ImageURL) ? ModulePath() + "/images/no-image.png" : company.ImageURL)"
+                                                         alt="@company.CompanyName"
+                                                         class="img-fluid rounded featured-company-image mt-2" />
+                                                </a>
+
+
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="card-body d-flex flex-column">
+                                                    <h5 class="card-title">
+                                                        <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs">@company.CompanyName</a>
+                                                        <ActionLink Action="CompanyEdit"
+                                                                    Parameters="@($"id={company.CompanyId}")" ReturnUrl="@ReturnUrl()"
+                                                                    Security="SecurityAccessLevel.Edit" Text="Edit" IconName="pencil" IconOnly Class="btn btn-outline-secondary btn-sm"
+                                                                    ResourceKey="CompanyEdit" />
+                                                    </h5>
+                                                    @if (!string.IsNullOrWhiteSpace(company.Address))
+                                                    {
+                                                        <div class="card-text">@company.Address<br /> @company.City, @company.State @company.ZipCode</div>
+                                                    }
+                                                    @if (!string.IsNullOrWhiteSpace(company.TypeDescription))
+                                                    {
+                                                        <p class="typeDescription mt-2"><a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs" class="typeDescription">@company.TypeDescription</a></p>
+                                                    }
+                                                    
+                                                </div>
                                             </div>
                                         </div>
+                                        <div class="row g-0">
+                                            <div class="col-md-12 text-center">
+                                                <div class="mt-1 mb-2 text-center">
+                                                    <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs" class="btn btn-outline-secondary btn-sm">View Details</a>
+                                                </div>
+                                            </div>
+                                            </div>
                                     </div>
                                 </div>
                             }
@@ -259,6 +279,7 @@
   //  private int _parentId = -1;
     private int _featuredCount = 3; // Default value for featured count 
     private string _apiKey = "";
+    string _newFeaturedLabel = "Featured Companies";
 
     private List<BusinessCompany> _companies;
     private int? _selectedTypeId;
@@ -268,6 +289,7 @@
 
     private BusinessType _typeInfo;
     private string _typeDescription;
+    private bool _showCompanyCount = true; // Default value for showing company count
 
     private BusinessCompany _companyInfo;
 
@@ -277,12 +299,15 @@
         {
             string featuredCount = SettingService.GetSetting(ModuleState.Settings, "FeaturedCount", "");
             _apiKey = SettingService.GetSetting(ModuleState.Settings, "GoogleApiKey", "");
+            _newFeaturedLabel = SettingService.GetSetting(ModuleState.Settings, "NewFeaturedLabel", "Featured Companies");
+            _showCompanyCount = bool.Parse(SettingService.GetSetting(ModuleState.Settings, "ShowCompanyCount", "true"));
             if (!string.IsNullOrWhiteSpace(featuredCount) && int.TryParse(featuredCount, out var count))
             {
                 _featuredCount = count;
             }
 
             ParentItems = BuildTree(await BusinessDirectoryService.GetBusinessDirectorysAsync(ModuleState.ModuleId));
+            
             _BusinessDirectorys = await BusinessDirectoryService.GetBusinessDirectorysAsync(ModuleState.ModuleId);
 
             // Parse typeId from query string
@@ -371,6 +396,10 @@
             builder.AddAttribute(seq++, "href", NavigateUrl() + $"?typeId={item.TypeId}#gibs");
             builder.AddAttribute(seq++, "class", "typeLinks");
             builder.AddContent(seq++, new string('\u00A0', level * 4) + item.TypeName);
+            if (item.CompanyCount > 0 && _showCompanyCount)
+            {
+                builder.AddContent(seq++, $" ({item.CompanyCount})");
+            }
             builder.CloseElement(); // a
             builder.CloseElement(); // div
 

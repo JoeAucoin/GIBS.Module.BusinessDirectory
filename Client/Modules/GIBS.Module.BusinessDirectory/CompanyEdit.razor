@@ -191,9 +191,9 @@
                     {
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="attr_@attr.AttributeId"
-                                   value="@attr.AttributeId"
-                                   @onchange="e => OnAttributeChecked(attr.AttributeId, e.Value is bool b && b)"
-                                   checked="@_selectedAttributeIds.Contains(attr.AttributeId)" />
+                                    value="@attr.AttributeId"
+                                    @onchange="e => OnAttributeChecked(attr.AttributeId, e.Value is bool b && b)"
+                                    checked="@_selectedAttributeIds.Contains(attr.AttributeId)" />
                             <label class="form-check-label" for="attr_@attr.AttributeId">@attr.AttributeName</label>
                         </div>
                     }
@@ -300,6 +300,7 @@ else
     
     private string _geoError;
     private string _apiKey = "";
+    private string _apiKeyGooglePlaces = "";
     private string _returnurl = string.Empty;
     private string _imageUploadError;
     private int _folderId = 1;
@@ -324,6 +325,7 @@ else
 
 
         _apiKey = SettingService.GetSetting(ModuleState.Settings, "GoogleApiKey", "");
+        _apiKeyGooglePlaces = SettingService.GetSetting(ModuleState.Settings, "GooglePlacesApiKey", "");
 
         // Correctly parse the setting as an integer
         if (int.TryParse(SettingService.GetSetting(ModuleState.Settings, "ImageFolder", "1"), out int folderId))
@@ -466,30 +468,33 @@ else
         {
             // Build the address string
             var address = $"{_company.Address}, {_company.City}, {_company.State} {_company.ZipCode}";
-        //    var _apiKey = SettingService.GetSetting(ModuleState.Settings, "GoogleApiKey", "");
-            if (string.IsNullOrWhiteSpace(_apiKey))
+          
+            if (string.IsNullOrWhiteSpace(_apiKeyGooglePlaces))
             {
-                _geoError = "Google Maps API key is missing in settings.";
+                _geoError = "Google Places API key is missing in settings.";
                 return;
             }
 
-            var url = $"https://maps.googleapis.com/maps/api/geocode/json?address={Uri.EscapeDataString(address)}&key={_apiKey}";
+            var url = $"https://maps.googleapis.com/maps/api/geocode/json?address={Uri.EscapeDataString(address)}&key={_apiKeyGooglePlaces}";
 
             using var http = new HttpClient();
             var response = await http.GetAsync(url);
             if (!response.IsSuccessStatusCode)
             {
-                _geoError = $"Error calling Google Maps API: {response.ReasonPhrase}";
+                _geoError = $"Error calling Google Places API: {response.ReasonPhrase}";
                 return;
             }
 
             var json = await response.Content.ReadAsStringAsync();
             var geo = System.Text.Json.JsonDocument.Parse(json);
+            var result = geo.RootElement.GetProperty("results")[0];
 
             var status = geo.RootElement.GetProperty("status").GetString();
+            var geoError = geo.RootElement.TryGetProperty("error_message", out var errorMessage) ? errorMessage.GetString() : "No error message provided";
+          //  var geoError = geo.RootElement.GetProperty("error_message").GetString();
             if (status != "OK")
             {
-                _geoError = $"Geocoding failed: {status}";
+                _geoError = $"Geocoding failed: {status} - {geoError}";
                 return;
             }
 
@@ -500,6 +505,10 @@ else
 
             _company.Latitude = location.GetProperty("lat").GetDouble();
             _company.Longitude = location.GetProperty("lng").GetDouble();
+          
+            var place_id = result.TryGetProperty("place_id", out var placeIdElement) ? placeIdElement.GetString() : null;
+
+            _geoError = $"Geocoding successful: Latitude {_company.Latitude}, Longitude {_company.Longitude}. Place ID: {place_id}";
         }
         catch (Exception ex)
         {
@@ -584,18 +593,20 @@ else
         {
             if (_isEditMode)
             {
-             //   _company.ModifiedBy = CurrentUserName;
-                await BusinessCompanyService.UpdateBusinessCompanyAsync(_company);
+                //   _company.ModifiedBy = CurrentUserName;
+                _company = await BusinessCompanyService.UpdateBusinessCompanyAsync(_company);
                 AddModuleMessage(Localizer["Success.Update"], MessageType.Success);
             }
             else
             {
                 _company.CreatedBy = CurrentUserName;
                 _company.ModuleId = ModuleState.ModuleId;
-                await BusinessCompanyService.AddBusinessCompanyAsync(_company);
+                // Capture the returned company object to get the new CompanyId
+                _company = await BusinessCompanyService.AddBusinessCompanyAsync(_company);
                 AddModuleMessage(Localizer["Success.Add"], MessageType.Success);
             }
 
+            // Now _company.CompanyId will be correct for both add and edit
             await BusinessCompanyService.UpdateCompanyAttributesAsync(_company.CompanyId, ModuleState.ModuleId, _selectedAttributeIds);
 
             NavigationManager.NavigateTo(ReturnUrl());
@@ -605,7 +616,6 @@ else
             AddModuleMessage(Localizer["Error.Save"] + $": {ex.Message}", MessageType.Error);
         }
     }
-
 
     // private async Task OnImageFileSelected(InputFileChangeEventArgs e)
     // {

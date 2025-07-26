@@ -135,9 +135,6 @@
   <data name="CompanyEdit" xml:space="preserve">
     <value>Edit</value>
   </data>
-  <data name="NewCompanies" xml:space="preserve">
-    <value>Featured Companies</value>
-  </data>
   <data name="SelectBusinessTypeToViewCompanies" xml:space="preserve">
     <value>Select a category on the right to view more companies . . .</value>
   </data>

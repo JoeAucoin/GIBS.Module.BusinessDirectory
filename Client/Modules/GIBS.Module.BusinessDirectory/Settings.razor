@@ -6,10 +6,19 @@
 
 <div class="container">
     <div class="row mb-1 align-items-center">
-        <Label Class="col-sm-3" For="googleApiKey" HelpText="Enter a Google ApiKey" ResourceKey="GoogleApiKey" ResourceType="@resourceType">Name: </Label>
+        <Label Class="col-sm-3" For="googleApiKey" HelpText="Enter a Google ApiKey" ResourceKey="GoogleApiKey" ResourceType="@resourceType">Google ApiKey: </Label>
             <div class="col-sm-9">
             <input id="googleApiKey" type="text" class="form-control" @bind="@_googleApiKey" />
             </div>
+    </div>
+
+    <div class="container">
+        <div class="row mb-1 align-items-center">
+            <Label Class="col-sm-3" For="googlePlacesApiKey" HelpText="Enter a Google Place ApiKey" ResourceKey="GooglePlacesApiKey" ResourceType="@resourceType">Google Places ApiKey: </Label>
+            <div class="col-sm-9">
+                <input id="googlePlacesApiKey" type="text" class="form-control" @bind="@_googlePlacesApiKey" />
+            </div>
+        </div>
     </div>
 
     <div class="row mb-1 align-items-center">
@@ -43,6 +52,21 @@
         </div>
     </div>
 
+    <div class="row mb-1 align-items-center">
+        <Label Class="col-sm-3" For="newFeaturedLabel" HelpText="Enter sentToUser Email" ResourceKey="NewFeaturedLabel" ResourceType="@resourceType">New/Featured Label: </Label>
+        <div class="col-sm-9">
+            <input id="newFeaturedLabel" class="form-control" @bind="@_newFeaturedLabel" required />
+        </div>
+    </div>
+
+
+    <div class="row mb-1 align-items-center">
+        <Label Class="col-sm-3" For="showCompanyCount" HelpText="Show Phone field" ResourceKey="ShowCompanyCount" ResourceType="@resourceType">Show Company Count: </Label>
+        <div class="col-sm-9">
+            <input type="checkbox" id="showCompanyCount" class="form-check-input" @bind="@_showCompanyCount" />
+        </div>
+    </div>
+
 </div>
 
 @code {
@@ -51,24 +75,30 @@
     public override string Title => "Business Directory Settings";
     private List<Folder> _folders = new List<Folder>();
 
-    string _googleApiKey;
-
-    string _featuredCount;
-    string _imageFolder;
-    string _imageMaxWidth;
-    string _imageMaxHeight;
+    private string _googleApiKey;
+    private string _googlePlacesApiKey;
+    private string _featuredCount;
+    private string _imageFolder;
+    private string _imageMaxWidth;
+    private string _imageMaxHeight;
+    private bool _showCompanyCount;
+    private string _newFeaturedLabel = "Featured Companies";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             Dictionary<string, string> settings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
+            //GooglePlacesApiKey
+            _googlePlacesApiKey = SettingService.GetSetting(settings, "GooglePlacesApiKey", "");
             _googleApiKey = SettingService.GetSetting(settings, "GoogleApiKey", "");
             _featuredCount = SettingService.GetSetting(settings, "FeaturedCount", "3");
             _imageFolder = SettingService.GetSetting(settings, "ImageFolder", "Root");
             _imageMaxWidth = SettingService.GetSetting(settings, "ImageMaxWidth", "800");
             _imageMaxHeight = SettingService.GetSetting(settings, "ImageMaxHeight", "600");
             _folders = await FolderService.GetFoldersAsync(PageState.Site.SiteId);
+            _showCompanyCount = bool.Parse(SettingService.GetSetting(settings, "ShowCompanyCount", "true"));
+            _newFeaturedLabel = SettingService.GetSetting(settings, "NewFeaturedLabel", "Featured Companies");
         }
         catch (Exception ex)
         {
@@ -86,6 +116,9 @@
             SettingService.SetSetting(settings, "ImageFolder", _imageFolder);
             SettingService.SetSetting(settings, "ImageMaxWidth", _imageMaxWidth);
             SettingService.SetSetting(settings, "ImageMaxHeight", _imageMaxHeight);
+            SettingService.SetSetting(settings, "GooglePlacesApiKey", _googlePlacesApiKey);
+            SettingService.SetSetting(settings, "ShowCompanyCount", _showCompanyCount.ToString());
+            SettingService.SetSetting(settings, "NewFeaturedLabel", _newFeaturedLabel);
             await SettingService.UpdateModuleSettingsAsync(settings, ModuleState.ModuleId);
         }
         catch (Exception ex)

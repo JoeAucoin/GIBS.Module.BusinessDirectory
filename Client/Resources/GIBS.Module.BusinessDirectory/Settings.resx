@@ -118,12 +118,18 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="GoogleApiKey.Text" xml:space="preserve">
-    <value>Google ApiKey: </value>
+    <value>Google Maps ApiKey: </value>
   </data>
   <data name="GoogleApiKey.HelpText" xml:space="preserve">
     <value>Enter a value for your Google ApiKey</value>
   </data>
   <data name="FeaturedCount.Text" xml:space="preserve">
     <value>Featured Count: </value>
+  </data>
+  <data name="GooglePlacesApiKey.HelpText" xml:space="preserve">
+    <value>Enter a value for your Google Places ApiKey (unrestricted)</value>
+  </data>
+  <data name="GooglePlacesApiKey.Text" xml:space="preserve">
+    <value>Google Places ApiKey:</value>
   </data>
 </root>
