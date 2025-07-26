@@ -153,4 +153,7 @@
   <data name="Message.DeleteError" xml:space="preserve">
     <value>Delete Error</value>
   </data>
+  <data name="Label.Slug.Text" xml:space="preserve">
+    <value>Slug</value>
+  </data>
 </root>

@@ -9,9 +9,9 @@ namespace GIBS.Module.BusinessDirectory
         {
             Name = "BusinessDirectory",
             Description = "Business Directory module for Oqtane",
-            Version = "1.0.3",
+            Version = "1.0.4",
             ServerManagerType = "GIBS.Module.BusinessDirectory.Manager.BusinessDirectoryManager, GIBS.Module.BusinessDirectory.Server.Oqtane",
-            ReleaseVersions = "1.0.0,1.0.1,1.0.3",
+            ReleaseVersions = "1.0.0,1.0.1,1.0.3,1.0.4",
             Dependencies = "GIBS.Module.BusinessDirectory.Shared.Oqtane",
             PackageName = "GIBS.Module.BusinessDirectory" 
         };

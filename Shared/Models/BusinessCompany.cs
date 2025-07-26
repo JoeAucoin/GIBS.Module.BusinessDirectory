@@ -35,7 +35,8 @@ namespace GIBS.Module.BusinessDirectory.Models
         public string ModifiedBy { get; set; }
         public DateTime ModifiedOn { get; set; }
         public string Slug { get; set; } // For SEO-friendly URLs
-
+        public string HtmlContent { get; set; } // For storing HTML content, if needed
+        public string EmbedVideo { get; set; } // For storing embedded video links
 
         [NotMapped]
         public string TypeName { get; set; } // Not mapped, for display only

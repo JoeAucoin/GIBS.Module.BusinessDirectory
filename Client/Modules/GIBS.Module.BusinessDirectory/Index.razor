@@ -98,6 +98,26 @@
                                 </div>
                              </div>
                         </div>
+                        @if (!string.IsNullOrWhiteSpace(_companyInfo.EmbedVideo))
+                        {
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <div class="videowrapper">
+                                        @((MarkupString)_companyInfo.EmbedVideo)
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(_companyInfo.HtmlContent))
+                        {
+
+                            <div class="row">
+                                <div class="col-12">
+                                    @((MarkupString)_companyInfo.HtmlContent)
+                                </div>
+                            </div>
+                        }
                         @if (_companyInfo.Latitude != 0 && _companyInfo.Longitude != 0)
                         {
                             <div class="row">
@@ -146,7 +166,7 @@
                                     <div class="card h-100">
                                         <div class="row g-0">
                                             <div class="col-md-6 d-flex align-items-start justify-content-center p-2">
-                                                <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs">
+                                                <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#gibs">
                                                     <img src="@(string.IsNullOrWhiteSpace(company.ImageURL) ? ModulePath() + "/images/no-image.png" : company.ImageURL)"
                                                          alt="@company.CompanyName"
                                                          class="img-fluid rounded featured-company-image mt-2" />
@@ -157,7 +177,7 @@
                                             <div class="col-md-6">
                                                 <div class="card-body d-flex flex-column">
                                                     <h5 class="card-title">
-                                                        <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs">@company.CompanyName</a>
+                                                        <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#gibs">@company.CompanyName</a>
                                                         <ActionLink Action="CompanyEdit"
                                                                     Parameters="@($"id={company.CompanyId}")" ReturnUrl="@ReturnUrl()"
                                                                     Security="SecurityAccessLevel.Edit" Text="Edit" IconName="pencil" IconOnly Class="btn btn-outline-secondary btn-sm"
@@ -169,7 +189,7 @@
                                                     }
                                                     @if (!string.IsNullOrWhiteSpace(company.TypeDescription))
                                                     {
-                                                        <p class="typeDescription mt-2"><a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs" class="typeDescription">@company.TypeDescription</a></p>
+                                                        <p class="typeDescription mt-2"><a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#gibs" class="typeDescription">@company.TypeDescription</a></p>
                                                     }
                                                     
                                                 </div>
@@ -178,7 +198,7 @@
                                         <div class="row g-0">
                                             <div class="col-md-12 text-center">
                                                 <div class="mt-1 mb-2 text-center">
-                                                    <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs" class="btn btn-outline-secondary btn-sm">View Details</a>
+                                                    <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#gibs" class="btn btn-outline-secondary btn-sm">View Details</a>
                                                 </div>
                                             </div>
                                             </div>
@@ -206,7 +226,7 @@
                                     <div class="company-listing-title">
                                         <img src="@ModulePath()/images/icon.png" alt="" class="company-icon" />
                                         <span>
-                                            <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs"
+                                            <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#gibs"
                                                  alt="@company.CompanyName">@company.CompanyName</a>
                                             <ActionLink Action="CompanyEdit"
                                                         Parameters="@($"id={company.CompanyId}")" ReturnUrl="@ReturnUrl()"
@@ -228,7 +248,7 @@
                                 </div>
                                 <div class="col-lg-2 col-md-2 col-sm-11 company-listing-actions">
                                     <div class="text-center">
-                                        <a href="@NavigateUrl()?companyid=@company.CompanyId&details=@company.Slug#gibs" class="btn btn-outline-secondary btn-sm">View Details</a>
+                                        <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#gibs" class="btn btn-outline-secondary btn-sm">View Details</a>
                                     </div>
 
                                 </div>
@@ -311,7 +331,7 @@
             _BusinessDirectorys = await BusinessDirectoryService.GetBusinessDirectorysAsync(ModuleState.ModuleId);
 
             // Parse typeId from query string
-            if (PageState.QueryString.ContainsKey("typeId") && int.TryParse(PageState.QueryString["typeId"], out var typeId))
+            if (PageState.QueryString.ContainsKey("tId") && int.TryParse(PageState.QueryString["tId"], out var typeId))
             {
                 _selectedTypeId = typeId;
                 _selectedCompanyId = null;
@@ -328,7 +348,7 @@
                 _companies = await BusinessCompanyService.GetBusinessCompaniesByTypeAsync(typeId, ModuleState.ModuleId);
             }
             // Parse companyId from query string
-            else if (PageState.QueryString.ContainsKey("companyid") && int.TryParse(PageState.QueryString["companyid"], out var companyId))
+            else if (PageState.QueryString.ContainsKey("id") && int.TryParse(PageState.QueryString["id"], out var companyId))
             {
                 _selectedTypeId = null;
                 _selectedCompanyId = companyId;
@@ -339,6 +359,13 @@
                     _typeInfo = await BusinessDirectoryService.GetBusinessDirectoryAsync(_companyInfo.TypeId, ModuleState.ModuleId);
                     _typeDescription = _typeInfo?.TypeDescription;
                     SetPageTitle(_companyInfo.CompanyName + " > " + _typeDescription);
+                     // AddHeadContent($"<meta name=\"description\" content=\"{_companyInfo.Description?.Replace("\"", "&quot;")}\" />");
+                     // AddHeadContent($"<meta name=\"keywords\" content=\"{_companyInfo.CompanyName}, {_typeDescription}, {_companyInfo.City}, {_companyInfo.State}\" />");
+                     // AddHeadContent($"<meta name=\"og:title\" content=\"{_companyInfo.CompanyName} - {_typeDescription}\" />");
+                     // //AddHeadContent($"<meta name=\"og:description\" content=\"{_companyInfo.Description?.Replace("\"", "&quot;")}\" />");    
+                     // string imageUrl = _companyInfo.ImageURL ?? ModulePath() + "/images/no-image.png";
+                     // string absoluteImageUrl = imageUrl.StartsWith("http") ? imageUrl : NavigationManager.ToAbsoluteUri(imageUrl).ToString();
+                     // AddHeadContent($"<meta name=\"og:image\" content=\"{absoluteImageUrl}\" />");
                 }
             }
             else
@@ -393,7 +420,7 @@
             builder.OpenElement(seq++, "div");
             builder.AddAttribute(seq++, "class", "typeLinksDiv");
             builder.OpenElement(seq++, "a");
-            builder.AddAttribute(seq++, "href", NavigateUrl() + $"?typeId={item.TypeId}#gibs");
+            builder.AddAttribute(seq++, "href", NavigateUrl() + $"?tId={item.TypeId}&details={item.Slug}#gibs");
             builder.AddAttribute(seq++, "class", "typeLinks");
             builder.AddContent(seq++, new string('\u00A0', level * 4) + item.TypeName);
             if (item.CompanyCount > 0 && _showCompanyCount)

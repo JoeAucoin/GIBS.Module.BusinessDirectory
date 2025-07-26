@@ -9,6 +9,7 @@
 @using System.Linq
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
+@using Oqtane.Modules.HtmlText.Services
 
 @namespace GIBS.Module.BusinessDirectory
 @inherits ModuleBase
@@ -16,6 +17,7 @@
 @inject IBusinessDirectoryService BusinessDirectoryService
 @inject IBAttributeService BAttributeService
 @inject NavigationManager NavigationManager
+@inject IHtmlTextService HtmlTextService
 @inject IStringLocalizer<CompanyEdit> Localizer
 @inject ISettingService SettingService
 @inject IFileService FileService
@@ -151,6 +153,21 @@
                     <textarea id="description" class="form-control" @bind="_company.Description"></textarea>
                 </div>
             </div>
+
+            <div class="row mb-1 align-items-center">
+                <Label Class="col-sm-3 align-items-start" For="htmlContent" HelpText="Enter the Html Content" ResourceKey="HtmlContent">Html Content: </Label>
+                <div class="col-sm-9">
+                    <RichTextEditor id="htmlContent" Content="@_company.HtmlContent" @bind="@_company.HtmlContent" @ref="@RichTextEditorHtml"></RichTextEditor>
+
+                </div>
+            </div>			
+		
+		    <div class="row mb-1 align-items-center">
+			    <Label Class="col-sm-3" For="embedVideo" HelpText="Enter a EmbedVideo." ResourceKey="Label.EmbedVideo">@Localizer["Label.EmbedVideo"]</Label>
+			    <div class="col-sm-9">
+				    <textarea id="embedVideo" class="form-control" @bind="_company.EmbedVideo"></textarea>
+			    </div>
+		    </div>
 
             <div class="row mb-1 align-items-center">
                 <Label Class="col-sm-3" For="slug" HelpText="Auto-generated from company name." ResourceKey="Label.Slug">@Localizer["Label.Slug"]</Label>
@@ -306,6 +323,7 @@ else
     private int _folderId = 1;
     private int _imageMaxWidth; // Set your max width here
     private int _imageMaxHeight; // Set your max height here
+    private RichTextEditor RichTextEditorHtml;
 
     public override List<Resource> Resources => new List<Resource>()
     {
@@ -591,6 +609,7 @@ else
 
         try
         {
+            _company.HtmlContent = await RichTextEditorHtml.GetHtml();
             if (_isEditMode)
             {
                 //   _company.ModifiedBy = CurrentUserName;

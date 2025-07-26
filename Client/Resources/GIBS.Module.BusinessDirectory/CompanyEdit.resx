@@ -192,6 +192,9 @@
   <data name="Label.UploadImage.Text" xml:space="preserve">
     <value>Upload Image:</value>
   </data>
+  <data name="Label.EmbedVideo.Text" xml:space="preserve">
+    <value>Embed Video</value>
+  </data>
   <data name="Label.Slug.Text" xml:space="preserve">
     <value>URL Slug</value>
   </data>

@@ -32,7 +32,7 @@
         <div class="row mb-1 align-items-center">
             <Label Class="col-sm-3" For="typeDescription" HelpText="Enter a Type Description" ResourceKey="TypeDescription">Type Description: </Label>
             <div class="col-sm-9">
-                <input id="typeDescription" class="form-control" @bind="@_typeDescription" />
+                <input id="typeDescription" class="form-control" @bind="@_typeDescription" @oninput="OnTypeDescriptionInput" required />
             </div>
         </div>
 
@@ -40,6 +40,13 @@
             <Label Class="col-sm-3" For="imageURL" HelpText="Enter a ImageURL" ResourceKey="ImageURL">Image: </Label>
             <div class="col-sm-9">
                 <input id="imageURL" class="form-control" @bind="@_imageURL" />
+            </div>
+        </div>
+
+        <div class="row mb-1 align-items-center">
+            <Label Class="col-sm-3" For="slug" HelpText="Auto-generated from Type Description." ResourceKey="Label.Slug">@Localizer["Label.Slug"]</Label>
+            <div class="col-sm-9">
+                <input id="slug" class="form-control" @bind="_Slug" />
             </div>
         </div>
 
@@ -101,9 +108,10 @@
     private string _typename;
     private string _typeDescription;
     private string _imageURL;
-    private int _sortOrder;
+    private int _sortOrder = 10;
     private bool _isActive = true;
     private bool _isNewItem;
+    private string _Slug;
    // private int _parentId;
 
 
@@ -143,6 +151,7 @@
                     _createdon = BusinessDirectory.CreatedOn;
                     _modifiedby = BusinessDirectory.ModifiedBy;
                     _modifiedon = BusinessDirectory.ModifiedOn;
+                    _Slug = BusinessDirectory.Slug;
                 }
             }
         }
@@ -172,6 +181,7 @@
                     BusinessDirectory.IsActive = _isActive;
                     BusinessDirectory.IsNewItem = _isNewItem;
                     BusinessDirectory.ParentId = _parentId;
+                    BusinessDirectory.Slug = _Slug;
                     
                     
                     BusinessDirectory = await BusinessDirectoryService.AddBusinessDirectoryAsync(BusinessDirectory);
@@ -187,6 +197,7 @@
                     BusinessDirectory.IsActive = _isActive;
                     BusinessDirectory.IsNewItem = _isNewItem;
                     BusinessDirectory.ParentId = _parentId;
+                    BusinessDirectory.Slug = _Slug;
                     await BusinessDirectoryService.UpdateBusinessDirectoryAsync(BusinessDirectory);
                     await logger.LogInformation("BusinessDirectory Updated {BusinessDirectory}", BusinessDirectory);
                 }
@@ -259,6 +270,27 @@
         }
     }
 };
+
+    private void OnTypeDescriptionInput(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? "";
+        _typeDescription = value;
+        _Slug = GenerateSlug(value);
+    }
+
+    private string GenerateSlug(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input)) return "";
+        // Convert to lower, replace spaces with '-', allow a-z and 0-9, remove other chars
+        var slug = new string(input.ToLower().Select(c =>
+            (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') ? c :
+            (c == ' ' ? '-' : '\0')).Where(c => c != '\0').ToArray());
+        // Replace multiple dashes with single dash
+        slug = System.Text.RegularExpressions.Regex.Replace(slug, "-+", "-");
+        // Trim dashes
+        slug = slug.Trim('-');
+        return slug;
+    }
 
     private string ReturnUrl()
     {
