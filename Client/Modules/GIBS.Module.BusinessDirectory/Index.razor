@@ -159,14 +159,14 @@
                         }
                         else
                         {
-                            <h3>@_newFeaturedLabel</h3>
+                            <h1>@_newFeaturedLabel</h1>
                             @foreach (var company in _newCompanies)
                             {
                                 <div class="col-lg-6 mb-4">
                                     <div class="card h-100">
                                         <div class="row g-0">
                                             <div class="col-md-6 d-flex align-items-start justify-content-center p-2">
-                                                <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#gibs">
+                                                <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#top">
                                                     <img src="@(string.IsNullOrWhiteSpace(company.ImageURL) ? ModulePath() + "/images/no-image.png" : company.ImageURL)"
                                                          alt="@company.CompanyName"
                                                          class="img-fluid rounded featured-company-image mt-2" />
@@ -177,7 +177,7 @@
                                             <div class="col-md-6">
                                                 <div class="card-body d-flex flex-column">
                                                     <h5 class="card-title">
-                                                        <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#gibs">@company.CompanyName</a>
+                                                        <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#top">@company.CompanyName</a>
                                                         <ActionLink Action="CompanyEdit"
                                                                     Parameters="@($"id={company.CompanyId}")" ReturnUrl="@ReturnUrl()"
                                                                     Security="SecurityAccessLevel.Edit" Text="Edit" IconName="pencil" IconOnly Class="btn btn-outline-secondary btn-sm"
@@ -189,7 +189,7 @@
                                                     }
                                                     @if (!string.IsNullOrWhiteSpace(company.TypeDescription))
                                                     {
-                                                        <p class="typeDescription mt-2"><a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#gibs" class="typeDescription">@company.TypeDescription</a></p>
+                                                        <p class="typeDescription mt-2"><a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#top" class="typeDescription">@company.TypeDescription</a></p>
                                                     }
                                                     
                                                 </div>
@@ -198,7 +198,7 @@
                                         <div class="row g-0">
                                             <div class="col-md-12 text-center">
                                                 <div class="mt-1 mb-2 text-center">
-                                                    <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#gibs" class="btn btn-outline-secondary btn-sm">View Details</a>
+                                                    <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#top" class="btn btn-outline-secondary btn-sm">View Details</a>
                                                 </div>
                                             </div>
                                             </div>
@@ -226,7 +226,7 @@
                                     <div class="company-listing-title">
                                         <img src="@ModulePath()/images/icon.png" alt="" class="company-icon" />
                                         <span>
-                                            <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#gibs"
+                                            <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#top"
                                                  alt="@company.CompanyName">@company.CompanyName</a>
                                             <ActionLink Action="CompanyEdit"
                                                         Parameters="@($"id={company.CompanyId}")" ReturnUrl="@ReturnUrl()"
@@ -248,7 +248,7 @@
                                 </div>
                                 <div class="col-lg-2 col-md-2 col-sm-11 company-listing-actions">
                                     <div class="text-center">
-                                        <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#gibs" class="btn btn-outline-secondary btn-sm">View Details</a>
+                                        <a href="@NavigateUrl()?id=@company.CompanyId&details=@company.Slug#top" class="btn btn-outline-secondary btn-sm">View Details</a>
                                     </div>
 
                                 </div>
@@ -420,7 +420,7 @@
             builder.OpenElement(seq++, "div");
             builder.AddAttribute(seq++, "class", "typeLinksDiv");
             builder.OpenElement(seq++, "a");
-            builder.AddAttribute(seq++, "href", NavigateUrl() + $"?tId={item.TypeId}&details={item.Slug}#gibs");
+            builder.AddAttribute(seq++, "href", NavigateUrl() + $"?tId={item.TypeId}&details={item.Slug}#top");
             builder.AddAttribute(seq++, "class", "typeLinks");
             builder.AddContent(seq++, new string('\u00A0', level * 4) + item.TypeName);
             if (item.CompanyCount > 0 && _showCompanyCount)
