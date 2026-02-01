@@ -142,9 +142,12 @@
     <value>View Company Details</value>
   </data>
   <data name="NoCompaniesFound" xml:space="preserve">
-    <value>No Companies Found In This Category</value>
+    <value>No Companies Found.</value>
   </data>
   <data name="Attributes.Text" xml:space="preserve">
     <value>Manage Attributes</value>
+  </data>
+  <data name="Message.CompanyNotFound" xml:space="preserve">
+    <value>The company with ID '{0}' could not be found.</value>
   </data>
 </root>

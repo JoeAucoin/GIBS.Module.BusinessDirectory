@@ -27,7 +27,7 @@ else if (_companies.Count == 0)
 else
 {
 
-    <Pager Items="@_companies" PageSize="10" Class="table table-striped">
+    <Pager Items="@_companies" PageSize="10" SearchProperties="CompanyName" Class="table table-striped">
         <Header>
         <th style="width: 1px;"></th>
         <th style="width: 1px;"></th>
@@ -57,6 +57,7 @@ else
 <div><NavLink class="btn btn-secondary" href="@NavigateUrl()">@Localizer["Return"]</NavLink></div>
 
 @code {
+    public override bool UseAdminContainer => false;
     
     public override string Title => Localizer?["PageTitle.ManageCompanies"] ?? "Manage Companies";
 
