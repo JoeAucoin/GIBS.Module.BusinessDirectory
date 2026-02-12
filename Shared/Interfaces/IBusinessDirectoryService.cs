@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace GIBS.Module.BusinessDirectory.Services
 {
-    public interface IBusinessDirectoryService 
+    public interface IBusinessDirectoryService
     {
         Task<List<Models.BusinessType>> GetBusinessDirectorysAsync(int ModuleId);
 

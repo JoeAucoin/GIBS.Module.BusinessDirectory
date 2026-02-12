@@ -31,7 +31,7 @@
 
   <ItemGroup>
     <Reference Include="Oqtane.Server">
-      <HintPath>..\..\oqtane.framework-6.1.2-Source\Oqtane.Server\bin\Debug\net9.0\Oqtane.Server.dll</HintPath>
+      <HintPath>..\..\oqtane.framework-6.1.2-Source\Oqtane.Server\bin\Release\net9.0\Oqtane.Server.dll</HintPath>
     </Reference>
     <Reference Include="Oqtane.Shared">
       <HintPath>..\..\oqtane.framework-6.1.2-Source\Oqtane.Server\bin\Debug\net9.0\Oqtane.Shared.dll</HintPath>

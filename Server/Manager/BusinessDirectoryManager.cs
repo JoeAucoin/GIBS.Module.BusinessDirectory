@@ -13,15 +13,50 @@ using System.Threading.Tasks;
 
 namespace GIBS.Module.BusinessDirectory.Manager
 {
-    public class BusinessDirectoryManager : MigratableModuleBase, IInstallable, IPortable, ISearchable
+    public class BusinessDirectoryManager : MigratableModuleBase, IInstallable, IPortable, ISearchable, ISitemap
     {
         private readonly IBusinessDirectoryRepository _BusinessDirectoryRepository;
         private readonly IDBContextDependencies _DBContextDependencies;
+        
+        private readonly IBusinessCompanyRepository _BusinessCompanyRepository;
 
-        public BusinessDirectoryManager(IBusinessDirectoryRepository BusinessDirectoryRepository, IDBContextDependencies DBContextDependencies)
+        public BusinessDirectoryManager(IBusinessDirectoryRepository BusinessDirectoryRepository, IBusinessCompanyRepository BusinessCompanyRepository, IDBContextDependencies DBContextDependencies)
         {
             _BusinessDirectoryRepository = BusinessDirectoryRepository;
             _DBContextDependencies = DBContextDependencies;
+            _BusinessCompanyRepository = BusinessCompanyRepository;
+
+        }
+
+        public List<Sitemap> GetUrls(string alias, string path, Oqtane.Models.Module module)
+        {
+            var sitemapUrls = new List<Sitemap>();
+            var categories = _BusinessDirectoryRepository.GetBusinessDirectorysAsync(module.ModuleId).GetAwaiter().GetResult();
+            var businesses = _BusinessCompanyRepository.GetBusinessCompaniesAsync(module.ModuleId).GetAwaiter().GetResult();
+
+            // 1. Fetch your custom module data (e.g., from a repository)
+            // 2. Loop through your items and create Sitemap objects
+            // 3. Example of adding a dynamic detail page:
+
+            foreach (var category in categories)
+            {
+
+                sitemapUrls.Add(new Sitemap
+                {
+                    Url = $"{alias}/{path}?tid={category.TypeId}&details={category.Slug}", // Construct the full URL
+                    ModifiedOn = DateTime.UtcNow
+                });
+            }
+
+            foreach (var business in businesses)
+            {
+                sitemapUrls.Add(new Sitemap
+                {
+                    Url = $"{alias}/{path}?id={business.CompanyId}&details={business.Slug}", // Construct the full URL
+                    ModifiedOn = DateTime.UtcNow
+                });
+            }
+            return sitemapUrls;
         }
 
         public bool Install(Tenant tenant, string version)
