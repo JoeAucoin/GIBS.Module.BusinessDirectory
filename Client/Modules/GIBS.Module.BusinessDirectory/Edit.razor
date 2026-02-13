@@ -91,7 +91,7 @@
 
 @code {
     public override SecurityAccessLevel SecurityAccessLevel => SecurityAccessLevel.Edit;
-
+    public override bool UseAdminContainer => false;
     public override string Actions => "Add,Edit";
 
     public override string Title => "Manage Business Directory Types";

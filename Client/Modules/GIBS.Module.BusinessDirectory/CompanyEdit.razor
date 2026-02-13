@@ -304,6 +304,7 @@ else
 
 @code {
     public override SecurityAccessLevel SecurityAccessLevel => SecurityAccessLevel.Edit;
+    public override bool UseAdminContainer => false;
     private BusinessCompany _company = new();
     private ElementReference _form;
     private bool _validated = false;
@@ -329,7 +330,7 @@ else
     public override List<Resource> Resources => new List<Resource>()
     {
         new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "Module.css" },
-        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + "Module.js" }
+        new Resource { ResourceType = ResourceType.Script, Level = ResourceLevel.Site, Url = ModulePath() + "Module.js" }
     };
 
     protected override async Task OnInitializedAsync()

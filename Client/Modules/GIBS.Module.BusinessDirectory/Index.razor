@@ -1,6 +1,7 @@
 @using GIBS.Module.BusinessDirectory.Services
 @using GIBS.Module.BusinessDirectory.Models
 @using System.ComponentModel.DataAnnotations.Schema
+@using System.Net
 
 @namespace GIBS.Module.BusinessDirectory
 @inherits ModuleBase
@@ -283,7 +284,7 @@
     public override List<Resource> Resources => new List<Resource>()
     {
         new Resource { ResourceType = ResourceType.Stylesheet, Url = ModulePath() + "Module.css" },
-        new Resource { ResourceType = ResourceType.Script, Url = ModulePath() + "Module.js" }
+     //   new Resource { ResourceType = ResourceType.Script, Level = ResourceLevel.Site, Url = ModulePath() + "Module.js" }
     };
 
 
@@ -354,6 +355,26 @@
                     _typeInfo = await BusinessDirectoryService.GetBusinessDirectoryAsync(_companyInfo.TypeId, ModuleState.ModuleId);
                     _typeDescription = _typeInfo?.TypeDescription;
                     SetPageTitle(_companyInfo.CompanyName + " > " + _typeDescription);
+                  
+                    var ogName = WebUtility.HtmlEncode(_companyInfo.CompanyName);
+                    var imageUrl = _companyInfo.ImageURL;
+                    var baseUrl = PageState.Alias.Protocol + PageState.Alias.Name;
+                    var ogImage = WebUtility.HtmlEncode(baseUrl + imageUrl);
+                    var description = _companyInfo.Description ?? "";
+                    if (description.Length > 196)
+                    {
+                        description = description.Substring(0, 196) + "...";
+                    }
+                    var ogDescription = WebUtility.HtmlEncode(description);
+                    var pageUrl = WebUtility.HtmlEncode(baseUrl + NavigateUrl()) + "?id=" + _companyInfo.CompanyId + "&details=" + _companyInfo.Slug;
+
+                    AddHeadContent($"<meta property=\"og:title\" content=\"{ogName}\" />");
+                    AddHeadContent($"<meta property=\"og:description\" content=\"{ogDescription}\" />");
+                    AddHeadContent($"<meta property=\"og:image\" content=\"{ogImage}\" />");
+                    AddHeadContent($"<meta property=\"og:url\" content=\"{pageUrl}\" />");
+                    AddHeadContent("<meta property=\"og:type\" content=\"website\" />");
+                    
+
                     
                 }
                 else
