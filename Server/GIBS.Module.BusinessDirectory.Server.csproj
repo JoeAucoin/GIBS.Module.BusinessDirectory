@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <Product>GIBS.Module.BusinessDirectory</Product>
     <Authors>GIBS</Authors>
     <Company>GIBS</Company>
@@ -11,6 +11,7 @@
     <Copyright>GIBS</Copyright>
     <AssemblyName>GIBS.Module.BusinessDirectory.Server.Oqtane</AssemblyName>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <RequireAspNetWebAssets>true</RequireAspNetWebAssets>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,10 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.9" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.9" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
-    <PackageReference Include="Microsoft.Extensions.Localization" Version="9.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Localization" Version="10.0.9" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,13 +32,18 @@
 
   <ItemGroup>
     <Reference Include="Oqtane.Server">
-      <HintPath>..\..\oqtane.framework-6.1.2-Source\Oqtane.Server\bin\Release\net9.0\Oqtane.Server.dll</HintPath>
+      <HintPath>..\..\oqtane.framework-6.1.2-Source\Oqtane.Server\bin\Release\net10.0\Oqtane.Server.dll</HintPath>
     </Reference>
     <Reference Include="Oqtane.Shared">
-      <HintPath>..\..\oqtane.framework-6.1.2-Source\Oqtane.Server\bin\Debug\net9.0\Oqtane.Shared.dll</HintPath>
+      <HintPath>..\..\oqtane.framework-6.1.2-Source\Oqtane.Server\bin\Debug\net10.0\Oqtane.Shared.dll</HintPath>
     </Reference>
     <Reference Include="SixLabors.ImageSharp">
-      <HintPath>..\..\oqtane.framework-6.1.2-Source\Oqtane.Server\bin\Debug\net9.0\SixLabors.ImageSharp.dll</HintPath>
+      <HintPath>..\..\oqtane.framework-6.1.2-Source\Oqtane.Server\bin\Debug\net10.0\SixLabors.ImageSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Oqtane.Server" Version="10.2.1" />
+  </ItemGroup>
+  
 </Project>

@@ -30,7 +30,7 @@
             <div class="row mb-1 align-items-center">
                 <Label Class="col-sm-3" For="typeId" HelpText="Select company type category." ResourceKey="Label.TypeId" />
                 <div class="col-sm-9">
-                    <select id="typeId" class="form-select" @bind="_company.TypeId" required>
+                    <select id="typeId" class="form-select @(IsTypeSelectionInvalid ? "is-invalid" : "")" @bind="_company.TypeId" required>
                         <option value="-1">@Localizer["SelectType"]</option>
                         @RenderOptions(ParentItems)
                     </select>
@@ -601,6 +601,13 @@ else
     private async Task SaveCompany()
     {
         _validated = true;
+
+        if (_company.TypeId <= 0)
+        {
+            AddModuleMessage(Localizer["Validation.CompanyType.Required"], MessageType.Warning);
+            return;
+        }
+
         var formIsValid = await JSRuntime.InvokeAsync<bool>("interopFormValid", _form);
 
         if (!formIsValid)
@@ -638,112 +645,11 @@ else
         }
     }
 
-    // private async Task OnImageFileSelected(InputFileChangeEventArgs e)
-    // {
-    //     _imageUploadError = null;
-    //     var file = e.File;
-    //     if (file == null)
-    //     {
-    //         return;
-    //     }
 
-    //     if (file.Size > 10 * 1024 * 1024) // 10 MB limit
-    //     {
-    //         _imageUploadError = "File size exceeds the 10MB limit.";
-    //         return;
-    //     }
 
-    //     try
-    //     {
-    //         // Get a stream for the file
-    //         using var stream = file.OpenReadStream(10 * 1024 * 1024);
+    private bool IsTypeSelectionInvalid => _validated && _company.TypeId <= 0;
 
-    //         // Create a new HttpClient
-    //         using var client = new HttpClient { BaseAddress = new Uri(NavigationManager.BaseUri) };
 
-    //         // Create the multipart form data content
-    //         using var formData = new MultipartFormDataContent();
-    //         using var fileContent = new StreamContent(stream);
-    //         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
-
-    //         // Add folder and file to the form data
-    //         formData.Add(fileContent, "file", file.Name);
-
-    //         // Post the form data to the API
-    //         var response = await client.PostAsync($"/api/BusinessCompany/upload-image", formData);
-
-    //         if (response.IsSuccessStatusCode)
-    //         {
-    //             var imageUrl = await response.Content.ReadAsStringAsync();
-    //             _company.ImageURL = imageUrl;
-    //             StateHasChanged(); // Refresh the UI to show the new image
-    //         }
-    //         else
-    //         {
-    //             var errorContent = await response.Content.ReadAsStringAsync();
-    //             _imageUploadError = $"Image upload failed: {response.ReasonPhrase}. Details: {errorContent}";
-    //         }
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         _imageUploadError = $"Image upload error: {ex.Message}";
-    //     }
-    // }
-
-    // private async Task OnImageFileSelected(InputFileChangeEventArgs e)
-    // {
-    //     _imageUploadError = null;
-    //     var file = e.File;
-    //     if (file == null)
-    //     {
-    //         _imageUploadError = "No file selected.";
-    //         return;
-    //     }
-
-    //     if (BusinessCompanyService == null)
-    //     {
-    //         _imageUploadError = "BusinessCompanyService is not available.";
-    //         return;
-    //     }
-
-    //     try
-    //     {
-    //         using var stream = file.OpenReadStream(10 * 1024 * 1024); // 10MB limit
-    //         var buffer = new byte[file.Size];
-    //         await stream.ReadAsync(buffer, 0, (int)file.Size);
-
-    //         var fileName = file.Name;
-    //         var imageUrl = await BusinessCompanyService.UploadImageAsync(buffer, fileName);
-
-    //         if (!string.IsNullOrEmpty(imageUrl))
-    //         {
-    //             if (_company == null)
-    //             {
-    //                 _imageUploadError = "Company object is not initialized.";
-    //             }
-    //             else
-    //             {
-    //                 _company.ImageURL = imageUrl;
-    //             }
-    //         }
-    //         else
-    //         {
-    //             _imageUploadError = "Image upload failed.";
-    //         }
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         _imageUploadError = $"Image upload error: {ex.Message}";
-    //     }
-    // }
-
-    // private async Task UploadFile()
-    // {
-    //     var postUrl = "/api/BusinessCompany/upload";
-    //     var folder = "uploads/business-images";
-    //     var name = "Company";
-    //     await JSRuntime.InvokeVoidAsync("uploadFiles", postUrl, folder, name);
-    // }
 
     private List<BusinessType> BuildTree(List<BusinessType> flatList)
     {
