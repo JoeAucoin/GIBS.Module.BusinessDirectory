@@ -334,13 +334,13 @@
                 _typeInfo = await BusinessDirectoryService.GetBusinessDirectoryAsync(typeId, ModuleState.ModuleId);
                 if (_typeInfo == null)
                 {
-                    AddModuleMessage(Localizer["Message.TypeNotFound"], MessageType.Error);
+                    var route = PageState.Route;
+                    NavigationManager.NavigateTo(route.SiteUrl + "/404", true);
+                    return;
                 }
-                else
-                {
-                    _typeDescription = _typeInfo.TypeDescription;
-                    SetPageTitle(_typeInfo.TypeName + " > " + _typeDescription);
-                }
+
+                _typeDescription = _typeInfo.TypeDescription;
+                SetPageTitle(_typeInfo.TypeName + " > " + _typeDescription);
                 _companies = await BusinessCompanyService.GetBusinessCompaniesByTypeAsync(typeId, ModuleState.ModuleId);
             }
             // Parse companyId from query string
@@ -379,9 +379,9 @@
                 }
                 else
                 {
-                     AddModuleMessage(Localizer["Message.CompanyNotFound", companyId.ToString()], MessageType.Info);
-                  //   return;
-                    
+                    var route = PageState.Route;
+                    NavigationManager.NavigateTo(route.SiteUrl + "/404", true);
+                    return;
                 }
             }
             else

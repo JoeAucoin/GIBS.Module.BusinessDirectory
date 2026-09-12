@@ -63,19 +63,25 @@ namespace GIBS.Module.BusinessDirectory.Server.Controllers
         // GET: api/BusinessCompany/5/34
         [HttpGet("{id}/{moduleid}")]
         [Authorize(Policy = PolicyNames.ViewModule)]
-        public async Task<BusinessCompany> Get(int id, int moduleid)
+        public async Task<ActionResult<BusinessCompany>> Get(int id, int moduleid)
         {
             var businessCompany = await _businessCompanyRepository.GetBusinessCompanyAsync(id, moduleid);
-            if (businessCompany != null && IsAuthorizedEntityId(EntityNames.Module, businessCompany.ModuleId))
+
+            // If the entity does not exist, return 404 Not Found
+            if (businessCompany == null)
             {
-                return businessCompany; // Now includes attributes
+                _logger.Log(LogLevel.Warning, this, LogFunction.Security, "BusinessCompany Not Found {BusinessCompanyId} {ModuleId}", id, moduleid);
+                return NotFound($"The company with ID '{id}' could not be found.");
             }
-            else
+
+            // If the module id is not authorized, return 403 Forbidden
+            if (!IsAuthorizedEntityId(EntityNames.Module, businessCompany.ModuleId))
             {
                 _logger.Log(LogLevel.Error, this, LogFunction.Security, "Unauthorized BusinessCompany Get Attempt {BusinessCompanyId} {ModuleId}", id, moduleid);
-                HttpContext.Response.StatusCode = (int)System.Net.HttpStatusCode.Forbidden;
-                return null;
+                return Forbid();
             }
+
+            return businessCompany; // Now includes attributes
         }
 
         // POST: api/BusinessCompany
@@ -114,7 +120,13 @@ namespace GIBS.Module.BusinessDirectory.Server.Controllers
         public async Task<IActionResult> Delete(int id, int moduleid)
         {
             var businessCompany = await _businessCompanyRepository.GetBusinessCompanyAsync(id, moduleid);
-            if (businessCompany == null || !IsAuthorizedEntityId(EntityNames.Module, businessCompany.ModuleId))
+            if (businessCompany == null)
+            {
+                _logger.Log(LogLevel.Warning, this, LogFunction.Security, "BusinessCompany Not Found for Delete {BusinessCompanyId} {ModuleId}", id, moduleid);
+                return NotFound($"The company with ID '{id}' could not be found.");
+            }
+
+            if (!IsAuthorizedEntityId(EntityNames.Module, businessCompany.ModuleId))
             {
                 _logger.Log(LogLevel.Error, this, LogFunction.Security, "Unauthorized BusinessCompany Delete Attempt {BusinessCompanyId} {ModuleId}", id, moduleid);
                 return Forbid();
